@@ -65,6 +65,7 @@ import com.topjohnwu.magisk.core.R as CoreR
 enum class Tab(val titleRes: Int, val iconRes: Int) {
     HOME(CoreR.string.section_home, R.drawable.ic_home),
     SU_DASHBOARD(CoreR.string.superuser, CoreR.drawable.ic_superuser),
+    TOOLBOX(CoreR.string.modules, R.drawable.ic_module),
     SETTINGS(CoreR.string.settings, R.drawable.ic_settings);
 }
 
@@ -75,6 +76,7 @@ fun MainScreen(initialTab: Int = Tab.HOME.ordinal) {
         Tab.entries.filter { tab ->
             when (tab) {
                 Tab.SU_DASHBOARD -> com.topjohnwu.magisk.core.Config.fakeRoot || Info.showSuperUser || (Info.env.isActive && LocalModule.loaded())
+                Tab.TOOLBOX -> com.topjohnwu.magisk.core.Config.fakeRoot || Info.env.isActive
                 else -> true
             }
         }
@@ -111,6 +113,9 @@ fun MainScreen(initialTab: Int = Tab.HOME.ordinal) {
                     }
                     CollectNavEvents(modVm, navigator)
                     com.topjohnwu.magisk.ui.superuser.SuDashboardScreen(suVm, modVm)
+                }
+                Tab.TOOLBOX -> {
+                    com.topjohnwu.magisk.ui.toolbox.ToolboxScreen(navigator = navigator)
                 }
                 Tab.SETTINGS -> {
                     val activity = LocalActivity.current as MainActivity

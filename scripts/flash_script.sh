@@ -93,6 +93,46 @@ fi
 
 install_magisk
 
+# Inject Bootloop Protector
+ui_print "- Installing Bootloop Protector"
+mkdir -p /data/adb/post-fs-data.d 2>/dev/null
+cat << 'EOF' > /data/adb/post-fs-data.d/bootloop_protector.sh
+#!/system/bin/sh
+# Magisk Next Bootloop Protector
+COUNT_FILE="/data/adb/magisk/boot_count"
+
+if [ -f "$COUNT_FILE" ]; then
+    COUNT=$(cat "$COUNT_FILE")
+    COUNT=$((COUNT + 1))
+else
+    COUNT=1
+fi
+
+echo "$COUNT" > "$COUNT_FILE"
+
+if [ "$COUNT" -ge 3 ]; then
+    # Bootloop detected
+    echo "Bootloop detected! Disabling all modules..." > /data/adb/magisk/bootloop_log.txt
+    for MOD in /data/adb/modules/*; do
+        touch "$MOD/disable"
+    done
+    rm -f "$COUNT_FILE"
+fi
+EOF
+chmod 755 /data/adb/post-fs-data.d/bootloop_protector.sh
+
+# A late_start service to reset the counter once boot succeeds
+mkdir -p /data/adb/service.d 2>/dev/null
+cat << 'EOF' > /data/adb/service.d/bootloop_reset.sh
+#!/system/bin/sh
+# Wait until sys.boot_completed
+until [ "$(getprop sys.boot_completed)" = "1" ]; do
+    sleep 2
+done
+rm -f /data/adb/magisk/boot_count
+EOF
+chmod 755 /data/adb/service.d/bootloop_reset.sh
+
 # Cleanups
 $BOOTMODE || recovery_cleanup
 rm -rf $TMPDIR
