@@ -32,6 +32,11 @@ data class ModuleJson(
 )
 
 @JsonClass(generateAdapter = true)
+data class ModuleHubIndex(
+    val modules: List<com.topjohnwu.magisk.core.model.module.OnlineModule>
+)
+
+@JsonClass(generateAdapter = true)
 data class ReleaseAssets(
     val name: String,
     @param:Json(name = "browser_download_url") val url: String,

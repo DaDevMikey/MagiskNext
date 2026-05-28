@@ -14,6 +14,7 @@ import com.topjohnwu.magisk.core.ktx.dateFormat
 import com.topjohnwu.magisk.core.model.Release
 import com.topjohnwu.magisk.core.model.ReleaseAssets
 import com.topjohnwu.magisk.core.model.UpdateInfo
+import com.topjohnwu.magisk.core.model.ModuleHubIndex
 import retrofit2.HttpException
 import timber.log.Timber
 import java.io.IOException
@@ -134,4 +135,5 @@ class NetworkService(
     suspend fun fetchFile(url: String) = wrap { raw.fetchFile(url) }
     suspend fun fetchString(url: String) = wrap { raw.fetchString(url) }
     suspend fun fetchModuleJson(url: String) = wrap { raw.fetchModuleJson(url) }
+    suspend fun fetchModuleHubIndex() = wrap { raw.fetchModuleHubIndex("https://raw.githubusercontent.com/DaDevMikey/MagiskNext-Modules/master/modules.json") }
 }

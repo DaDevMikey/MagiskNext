@@ -12,9 +12,11 @@ data class OnlineModule(
     override var versionCode: Int,
     val zipUrl: String,
     val changelog: String,
+    val author: String = "",
+    val description: String = ""
 ) : Module(), Parcelable {
     constructor(local: LocalModule, json: ModuleJson) :
-        this(local.id, local.name, json.version, json.versionCode, json.zipUrl, json.changelog)
+        this(local.id, local.name, json.version, json.versionCode, json.zipUrl, json.changelog, local.author, local.description)
 
     val downloadFilename get() = "$name-$version($versionCode).zip".legalFilename()
 

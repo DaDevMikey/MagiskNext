@@ -1,133 +1,134 @@
 package com.topjohnwu.magisk.ui.module
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.RocketLaunch
-import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.CloudDownload
-import androidx.compose.material.icons.outlined.Security
-import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.topjohnwu.magisk.core.download.DownloadEngine
+import com.topjohnwu.magisk.core.model.module.OnlineModule
+import com.topjohnwu.magisk.core.wrap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ModuleHubScreen(onBack: () -> Unit) {
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseAlpha"
-    )
+fun ModuleHubScreen(
+    onBack: () -> Unit,
+    viewModel: ModuleHubViewModel = viewModel()
+) {
+    val context = LocalContext.current
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     Scaffold(
         topBar = {
-            LargeTopAppBar(
+            TopAppBar(
                 title = { Text("Module Hub") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.refresh() }) {
+                        if (viewModel.isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        } else {
+                            Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                        }
+                    }
+                },
+                scrollBehavior = scrollBehavior
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.RocketLaunch,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(80.dp)
-                    .alpha(pulseAlpha),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(Modifier.height(24.dp))
-            Text(
-                text = "Coming Soon",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = "The Module Hub is being built to bring you a curated library of Magisk modules — browse, download, and update all in one place.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(32.dp))
-
-            // Upcoming features cards
-            Text(
-                text = "Planned Features",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(12.dp))
-            FeaturePreviewItem(Icons.Outlined.CloudDownload, "One-Tap Install", "Download and flash modules directly from the hub.")
-            FeaturePreviewItem(Icons.Outlined.AutoAwesome, "Auto-Updates", "Keep your modules up to date automatically.")
-            FeaturePreviewItem(Icons.Outlined.Security, "Verified Modules", "Signature-verified modules for safety.")
-            FeaturePreviewItem(Icons.Outlined.Speed, "Bootloop Protector", "Automatic recovery if a module causes boot failure.")
+        if (viewModel.isError) {
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+                Text("Failed to load modules from server.", color = MaterialTheme.colorScheme.error)
+            }
+        } else if (viewModel.modules.isEmpty() && !viewModel.isLoading) {
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+                Text("No modules available yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        } else {
+            LazyColumn(
+                contentPadding = innerPadding,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(viewModel.modules) { module ->
+                    ModuleHubItem(
+                        item = module,
+                        onDownloadClick = {
+                            val subject = OnlineModuleSubject(module, true)
+                            val activity = context as? com.topjohnwu.magisk.ui.MainActivity
+                            if (activity != null) {
+                                DownloadEngine.startWithActivity(activity, subject)
+                            } else {
+                                DownloadEngine.start(context, subject)
+                            }
+                        }
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun FeaturePreviewItem(icon: ImageVector, title: String, description: String) {
+private fun ModuleHubItem(item: OnlineModule, onDownloadClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-        )
+        ),
+        shape = MaterialTheme.shapes.extraLarge
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(28.dp)
-            )
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium
+                    text = "${item.name} (${item.version})",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+                Spacer(Modifier.height(4.dp))
                 Text(
-                    text = description,
+                    text = "by ${item.author}",
                     style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = item.description,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(
+                onClick = onDownloadClick,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.CloudDownload,
+                    contentDescription = "Download ${item.name}",
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         }
