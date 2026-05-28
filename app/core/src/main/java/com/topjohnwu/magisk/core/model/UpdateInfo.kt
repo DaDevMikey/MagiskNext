@@ -61,6 +61,8 @@ data class Release(
     val versionCode: Int get() {
         return if (tag[0] == 'v') {
             (tag.drop(1).toFloat() * 1000).toInt()
+        } else if (tag[0].isDigit()) {
+            (tag.toFloat() * 1000).toInt()
         } else {
             tag.drop(7).toInt()
         }

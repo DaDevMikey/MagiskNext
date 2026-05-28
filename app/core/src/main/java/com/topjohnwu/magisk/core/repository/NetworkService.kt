@@ -52,7 +52,7 @@ class NetworkService(
             val response = api.fetchReleases(page = page)
             val releases = response.body() ?: throw HttpException(response)
             // Remove all non Magisk releases
-            releases.removeAll { it.tag[0] != 'v' && !it.tag.startsWith("canary") }
+            releases.removeAll { it.tag[0] != 'v' && !it.tag.startsWith("canary") && !it.tag[0].isDigit() }
             // Make sure it's sorted correctly
             releases.sortByDescending { it.createdTime }
             releases.find(predicate)?.let { return it }
