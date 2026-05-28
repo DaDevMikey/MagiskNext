@@ -135,7 +135,13 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                                     com.topjohnwu.magisk.ui.log.LogScreen(vm, onBack = { navigator.pop() })
                                 }
                                 entry<Route.ExperimentalFeatures> { _ ->
-                                    com.topjohnwu.magisk.ui.experimental.ExperimentalFeaturesScreen(navigator = navigator, onBack = { navigator.pop() })
+                                    androidx.compose.animation.AnimatedVisibility(
+                                        visible = true,
+                                        enter = androidx.compose.animation.slideInHorizontally(initialOffsetX = { it }) + androidx.compose.animation.fadeIn(),
+                                        exit = androidx.compose.animation.slideOutHorizontally(targetOffsetX = { it }) + androidx.compose.animation.fadeOut()
+                                    ) {
+                                        com.topjohnwu.magisk.ui.experimental.ExperimentalFeaturesScreen(navigator = navigator, onBack = { navigator.pop() })
+                                    }
                                 }
                                 entry<Route.ModuleHub> { _ ->
                                     com.topjohnwu.magisk.ui.module.ModuleHubScreen(onBack = { navigator.pop() })

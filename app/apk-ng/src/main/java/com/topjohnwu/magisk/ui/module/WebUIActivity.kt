@@ -52,10 +52,33 @@ class WebUIActivity : ComponentActivity() {
         if (!cacheDir.exists()) cacheDir.mkdirs()
         
         if (com.topjohnwu.magisk.core.Config.fakeRoot && moduleId == "fake_module") {
-            val fakeWebroot = File(com.topjohnwu.magisk.core.AppContext.cacheDir, "fake_module/webroot")
-            if (fakeWebroot.exists()) {
-                fakeWebroot.copyRecursively(cacheDir, overwrite = true)
-            }
+            val fakeHtml = File(cacheDir, "index.html")
+            fakeHtml.writeText(
+                """
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Fake Module Dashboard</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #121212; color: #ffffff; padding: 20px; }
+                        h1 { font-weight: 300; }
+                        .card { background: #1e1e1e; border-radius: 12px; padding: 20px; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+                        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 16px; margin-top: 10px; cursor: pointer; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Mock Dashboard</h1>
+                    <div class="card">
+                        <h2>System Info</h2>
+                        <p>Status: Active (Mock)</p>
+                        <button onclick="alert('Settings saved (Mock)')">Save Configuration</button>
+                    </div>
+                </body>
+                </html>
+                """.trimIndent()
+            )
         } else {
             // Copy webroot from /data/adb/modules/<id>/webroot to cache
             Shell.cmd("cp -rf /data/adb/modules/$moduleId/webroot/* ${cacheDir.absolutePath}").exec()
