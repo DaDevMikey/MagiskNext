@@ -110,7 +110,7 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
                         val uri = withContext(Dispatchers.IO) {
                             try {
                                 val moduleProp = "id=$id\nname=$title\nversion=$version\nversionCode=$versionCode\nauthor=$creator\ndescription=$description\n"
-                                val zipFile = File(AppContext.cacheDir, "created_module.zip")
+                                val zipFile = File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS), "magisk_module_${id}.zip")
                                 ZipOutputStream(FileOutputStream(zipFile)).use { zos ->
                                     zos.putNextEntry(ZipEntry("module.prop"))
                                     zos.write(moduleProp.toByteArray())
@@ -120,7 +120,7 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
                                     zos.write(script.toByteArray())
                                     zos.closeEntry()
                                 }
-                                FileProvider.getUriForFile(context, "${context.packageName}.provider", zipFile)
+                                Uri.fromFile(zipFile)
                             } catch (e: Exception) {
                                 null
                             }

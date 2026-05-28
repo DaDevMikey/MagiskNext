@@ -73,7 +73,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             CustomizationSection(viewModel)
             Spacer(Modifier.height(12.dp))
             AppSettingsSection(navigator)
-            if (Info.env.isActive) {
+            if (Info.env.isActive || Config.fakeRoot) {
                 Spacer(Modifier.height(12.dp))
                 MagiskSection(viewModel)
             }
