@@ -2,7 +2,7 @@
 # ADDOND_VERSION=2
 ########################################################
 #
-# Magisk Survival Script for ROMs with addon.d support
+# Magisk Next Survival Script for ROMs with addon.d support
 # by topjohnwu and osm0sis
 #
 ########################################################
@@ -33,11 +33,11 @@ trampoline() {
       fi
     }
 
-    ui_print "***********************"
-    ui_print " Magisk addon.d failed"
-    ui_print "***********************"
-    ui_print "! Cannot find Magisk binaries - was data wiped or not decrypted?"
-    ui_print "! Reflash OTA from decrypted recovery or reflash Magisk"
+    ui_print "****************************"
+    ui_print " Magisk Next addon.d failed"
+    ui_print "****************************"
+    ui_print "! Cannot find Magisk Next binaries - was data wiped or not decrypted?"
+    ui_print "! Reflash OTA from decrypted recovery or reflash Magisk Next"
   fi
   exit 1
 }
@@ -91,7 +91,7 @@ main() {
   else
     PRETTY_VER="$MAGISK_VER($MAGISK_VER_CODE)"
   fi
-  print_title "Magisk $PRETTY_VER addon.d"
+  print_title "Magisk Next $PRETTY_VER addon.d"
 
   mount_partitions
   check_data

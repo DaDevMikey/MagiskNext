@@ -91,8 +91,8 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Integrated Module Creator") },
+            LargeTopAppBar(
+                title = { Text("Module Creator") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -110,7 +110,7 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
                         val uri = withContext(Dispatchers.IO) {
                             try {
                                 val moduleProp = "id=$id\nname=$title\nversion=$version\nversionCode=$versionCode\nauthor=$creator\ndescription=$description\n"
-                                val zipFile = File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS), "magisk_module_${id}.zip")
+                                val zipFile = File(context.cacheDir, "magisk_module_${id}.zip")
                                 ZipOutputStream(FileOutputStream(zipFile)).use { zos ->
                                     zos.putNextEntry(ZipEntry("module.prop"))
                                     zos.write(moduleProp.toByteArray())
@@ -120,7 +120,7 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
                                     zos.write(script.toByteArray())
                                     zos.closeEntry()
                                 }
-                                Uri.fromFile(zipFile)
+                                FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", zipFile)
                             } catch (e: Exception) {
                                 null
                             }
@@ -158,7 +158,8 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
                 label = { Text("Module ID") },
                 placeholder = { Text("e.g., my_awesome_module") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                shape = MaterialTheme.shapes.large
             )
             
             OutlinedTextField(
@@ -166,7 +167,8 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
                 onValueChange = { title = it },
                 label = { Text("Title") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                shape = MaterialTheme.shapes.large
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -176,7 +178,8 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
                     label = { Text("Version") },
                     placeholder = { Text("1.0") },
                     modifier = Modifier.weight(1f),
-                    singleLine = true
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.large
                 )
                 OutlinedTextField(
                     value = versionCode,
@@ -184,7 +187,8 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
                     label = { Text("Version Code") },
                     placeholder = { Text("1") },
                     modifier = Modifier.weight(1f),
-                    singleLine = true
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.large
                 )
             }
 
@@ -193,7 +197,8 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
                 onValueChange = { creator = it },
                 label = { Text("Creator/Author") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                shape = MaterialTheme.shapes.large
             )
 
             OutlinedTextField(
@@ -201,7 +206,8 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
                 onValueChange = { description = it },
                 label = { Text("Description") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 3
+                minLines = 3,
+                shape = MaterialTheme.shapes.large
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))

@@ -139,58 +139,13 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                                     com.topjohnwu.magisk.ui.log.LogScreen(vm, onBack = { navigator.pop() })
                                 }
                                 entry<Route.ExperimentalFeatures> { _ ->
-                                    var isVisible by remember { mutableStateOf(true) }
-                                    BackHandler(enabled = isVisible) { isVisible = false }
-                                    LaunchedEffect(isVisible) {
-                                        if (!isVisible) {
-                                            kotlinx.coroutines.delay(300)
-                                            navigator.pop()
-                                        }
-                                    }
-                                    
-                                    androidx.compose.animation.AnimatedVisibility(
-                                        visible = isVisible,
-                                        enter = androidx.compose.animation.slideInHorizontally(initialOffsetX = { it }) + androidx.compose.animation.fadeIn(),
-                                        exit = androidx.compose.animation.slideOutHorizontally(targetOffsetX = { it }) + androidx.compose.animation.fadeOut()
-                                    ) {
-                                        com.topjohnwu.magisk.ui.experimental.ExperimentalFeaturesScreen(navigator = navigator, onBack = { isVisible = false })
-                                    }
+                                    com.topjohnwu.magisk.ui.experimental.ExperimentalFeaturesScreen(navigator = navigator, onBack = { navigator.pop() })
                                 }
                                 entry<Route.ModuleHub> { _ ->
-                                    var isVisible by remember { mutableStateOf(true) }
-                                    BackHandler(enabled = isVisible) { isVisible = false }
-                                    LaunchedEffect(isVisible) {
-                                        if (!isVisible) {
-                                            kotlinx.coroutines.delay(300)
-                                            navigator.pop()
-                                        }
-                                    }
-                                    
-                                    androidx.compose.animation.AnimatedVisibility(
-                                        visible = isVisible,
-                                        enter = androidx.compose.animation.slideInHorizontally(initialOffsetX = { it }) + androidx.compose.animation.fadeIn(),
-                                        exit = androidx.compose.animation.slideOutHorizontally(targetOffsetX = { it }) + androidx.compose.animation.fadeOut()
-                                    ) {
-                                        com.topjohnwu.magisk.ui.module.ModuleHubScreen(onBack = { isVisible = false })
-                                    }
+                                    com.topjohnwu.magisk.ui.module.ModuleHubScreen(onBack = { navigator.pop() })
                                 }
                                 entry<Route.ModuleCreator> { _ ->
-                                    var isVisible by remember { mutableStateOf(true) }
-                                    BackHandler(enabled = isVisible) { isVisible = false }
-                                    LaunchedEffect(isVisible) {
-                                        if (!isVisible) {
-                                            kotlinx.coroutines.delay(300)
-                                            navigator.pop()
-                                        }
-                                    }
-                                    
-                                    androidx.compose.animation.AnimatedVisibility(
-                                        visible = isVisible,
-                                        enter = androidx.compose.animation.slideInHorizontally(initialOffsetX = { it }) + androidx.compose.animation.fadeIn(),
-                                        exit = androidx.compose.animation.slideOutHorizontally(targetOffsetX = { it }) + androidx.compose.animation.fadeOut()
-                                    ) {
-                                        com.topjohnwu.magisk.ui.module.ModuleCreatorScreen(onBack = { isVisible = false })
-                                    }
+                                    com.topjohnwu.magisk.ui.module.ModuleCreatorScreen(onBack = { navigator.pop() })
                                 }
                                 entry<Route.Flash> { key ->
                                     val vm: FlashViewModel = viewModel(factory = VMFactory)

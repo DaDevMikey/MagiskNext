@@ -1,6 +1,6 @@
 #MAGISK
 ############################################
-# Magisk Flash Script (updater-script)
+# Magisk Next Flash Script (updater-script)
 ############################################
 
 ##############
@@ -33,7 +33,7 @@ if echo $MAGISK_VER | grep -q '\.'; then
 else
   PRETTY_VER="$MAGISK_VER($MAGISK_VER_CODE)"
 fi
-print_title "Magisk $PRETTY_VER Installer"
+print_title "Magisk Next $PRETTY_VER Installer"
 
 is_mounted /data || mount /data || is_mounted /cache || mount /cache
 mount_partitions
@@ -47,7 +47,7 @@ ui_print "- Target image: $BOOTIMAGE"
 # Detect version and architecture
 api_level_arch_detect
 
-[ $API -lt 23 ] && abort "! Magisk only support Android 6.0 and above"
+[ $API -lt 23 ] && abort "! Magisk Next only supports Android 6.0 and above"
 
 ui_print "- Device platform: $ABI"
 

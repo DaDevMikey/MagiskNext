@@ -1,6 +1,6 @@
 #MAGISK
 ############################################
-# Magisk Uninstaller (updater-script)
+# Magisk Next Uninstaller (updater-script)
 ############################################
 
 ##############
@@ -33,12 +33,12 @@ if echo $MAGISK_VER | grep -q '\.'; then
 else
   PRETTY_VER="$MAGISK_VER($MAGISK_VER_CODE)"
 fi
-print_title "Magisk $PRETTY_VER Uninstaller"
+print_title "Magisk Next $PRETTY_VER Uninstaller"
 
-is_mounted /data || mount /data || abort "! Unable to mount /data, please uninstall with the Magisk app"
+is_mounted /data || mount /data || abort "! Unable to mount /data, please uninstall with the Magisk Next app"
 mount_partitions
 check_data
-$DATA_DE || abort "! Cannot access /data, please uninstall with the Magisk app"
+$DATA_DE || abort "! Cannot access /data, please uninstall with the Magisk Next app"
 get_flags
 find_boot_image
 
@@ -163,16 +163,16 @@ fi
 cd /
 
 if $BOOTMODE; then
-  ui_print "********************************************"
-  ui_print " The Magisk app will uninstall itself, and"
-  ui_print " the device will reboot after a few seconds"
-  ui_print "********************************************"
+  ui_print "**************************************************"
+  ui_print " Magisk Next will uninstall itself, and the"
+  ui_print " device will reboot after a few seconds."
+  ui_print "**************************************************"
   (sleep 8; /system/bin/reboot)&
 else
-  ui_print "********************************************"
-  ui_print " The Magisk app will not be uninstalled"
-  ui_print " Please uninstall it manually after reboot"
-  ui_print "********************************************"
+  ui_print "**************************************************"
+  ui_print " The Magisk Next app will not be uninstalled."
+  ui_print " Please uninstall it manually after reboot."
+  ui_print "**************************************************"
   recovery_cleanup
   ui_print "- Done"
 fi

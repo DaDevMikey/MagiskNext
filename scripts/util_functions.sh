@@ -1,5 +1,5 @@
 ############################################
-# Magisk General Utility Functions
+# Magisk Next General Utility Functions
 ############################################
 
 #MAGISK_VERSION_STUB
@@ -697,7 +697,7 @@ install_module() {
     set_permissions
   else
     print_title "$MODNAME" "by $MODAUTH"
-    print_title "Powered by Magisk"
+    print_title "Powered by Magisk Next"
 
     unzip -o "$ZIPFILE" customize.sh -d $MODPATH >&2
 

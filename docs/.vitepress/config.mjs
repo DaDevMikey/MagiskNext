@@ -4,6 +4,7 @@ export default defineConfig({
   base: '/MagiskNext/',
   title: "Magisk Next",
   description: "The Next Generation of Root",
+  ignoreDeadLinks: true,
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },

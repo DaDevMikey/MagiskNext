@@ -6,11 +6,11 @@ Magisk does not modify most read-only partitions, which means applying official 
 ### Prerequisites
 - Please disable *Automatic system updates* in developer options, so it won't install OTAs without your acknowledgement.
 
-<p align="center"><img src="./images/disable_auto_ota.png" width="250"/></p>
+<p align="center"><img src="/MagiskNext/images/disable_auto_ota.png" width="250"/></p>
 
 - When an OTA is available, first go to (Magisk app → Uninstall → Restore Images). **Do not reboot or you will have Magisk uninstalled.** This will restore partitions modified by Magisk back to stock from backups made at install in order to pass pre-OTA block verifications. **This step is required before doing any of the following steps written below!**
 
-<p align="center"><img src="./images/restore_img.png" width="300"/></p>
+<p align="center"><img src="/MagiskNext/images/restore_img.png" width="300"/></p>
 
 ### Devices with A/B Partitions
 
@@ -19,11 +19,11 @@ It is possible to have the OTA installed to the inactive slot and have the Magis
 - After restoring stock images, apply OTAs as you normally would (Settings → System → System Update).
 - Wait for the installation to be fully done (both step 1: "installing update", and step 2: "optimizing your device", of the OTA), **do not press the "Restart now" or "Reboot" button!** Instead, go to (Magisk app → Install → Install to Inactive Slot) to install Magisk to the updated slot.
 
-<p align="center"><img src="./images/ota_done.png" width="250"/> <img src="./images/install_inactive_slot.png" width="250"/></p>
+<p align="center"><img src="/MagiskNext/images/ota_done.png" width="250"/> <img src="/MagiskNext/images/install_inactive_slot.png" width="250"/></p>
 
 - After installation is done, follow the final instructions at the end of the Magisk installation on how to reboot into the new slot, currently involving going back to the regular system update and hitting "restart now" (previous method of using reboot within Magisk App may not result in rebooting to new slot). Under-the-hood, the Magisk app tracks your device switch to the updated slot, bypassing any possible post-OTA verifications.
 
-<p align="center"><img src="./images/manager_reboot.png" width="250"/></p>
+<p align="center"><img src="/MagiskNext/images/manager_reboot.png" width="250"/></p>
 
 ### "Non A/B" Devices
 Unfortunately, there are no real good ways to apply OTAs on these devices. The following tutorial will not preserve Magisk; you will have to manually re-root your device after the upgrade, and this will require access to a computer. These are simply "best practices".

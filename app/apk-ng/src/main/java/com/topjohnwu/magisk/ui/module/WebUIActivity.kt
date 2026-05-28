@@ -60,12 +60,21 @@ class WebUIActivity : ComponentActivity() {
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Fake Module Dashboard</title>
+                    <title>Module Dashboard</title>
                     <style>
-                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #121212; color: #ffffff; padding: 20px; }
-                        h1 { font-weight: 300; }
-                        .card { background: #1e1e1e; border-radius: 12px; padding: 20px; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-                        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 16px; margin-top: 10px; cursor: pointer; }
+                        :root { --md-primary: #D0BCFF; --md-surface: #1C1B1F; --md-surface-container: #2B2930; --md-on-surface: #E6E1E5; --md-on-surface-variant: #CAC4D0; --md-outline: #938F99; }
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; background: var(--md-surface); color: var(--md-on-surface); padding: 24px; min-height: 100vh; }
+                        h1 { font-weight: 400; font-size: 28px; margin-bottom: 24px; letter-spacing: -0.5px; }
+                        .card { background: var(--md-surface-container); border-radius: 16px; padding: 20px; margin-bottom: 16px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+                        .card:active { transform: scale(0.98); }
+                        .card h2 { font-size: 16px; font-weight: 500; margin-bottom: 8px; color: var(--md-primary); }
+                        .card p { font-size: 14px; color: var(--md-on-surface-variant); line-height: 1.5; }
+                        .btn { display: inline-flex; align-items: center; justify-content: center; background: var(--md-primary); color: #1C1B1F; border: none; padding: 12px 24px; border-radius: 100px; font-size: 14px; font-weight: 500; letter-spacing: 0.1px; cursor: pointer; transition: all 0.2s ease; margin-top: 12px; }
+                        .btn:active { transform: scale(0.95); opacity: 0.8; }
+                        .snackbar { position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%); background: #E8DEF8; color: #1C1B1F; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 500; transition: bottom 0.3s cubic-bezier(0.2, 0, 0, 1); z-index: 100; box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+                        .snackbar.show { bottom: 24px; }
+                        .chip { display: inline-flex; padding: 6px 16px; border-radius: 8px; background: rgba(208,188,255,0.12); color: var(--md-primary); font-size: 12px; font-weight: 500; margin-right: 8px; margin-top: 8px; }
                     </style>
                 </head>
                 <body>
@@ -73,8 +82,27 @@ class WebUIActivity : ComponentActivity() {
                     <div class="card">
                         <h2>System Info</h2>
                         <p>Status: Active (Mock)</p>
-                        <button onclick="alert('Settings saved (Mock)')">Save Configuration</button>
+                        <div><span class="chip">Zygisk</span><span class="chip">MagiskHide</span></div>
                     </div>
+                    <div class="card">
+                        <h2>Configuration</h2>
+                        <p>Adjust module parameters and preferences.</p>
+                        <button class="btn" onclick="showSnackbar('Configuration saved successfully')">Save Configuration</button>
+                    </div>
+                    <div class="card">
+                        <h2>Diagnostics</h2>
+                        <p>Run a self-test to check module health.</p>
+                        <button class="btn" onclick="showSnackbar('All systems nominal ✓')">Run Diagnostics</button>
+                    </div>
+                    <div id="snackbar" class="snackbar"></div>
+                    <script>
+                        function showSnackbar(msg) {
+                            const sb = document.getElementById('snackbar');
+                            sb.textContent = msg;
+                            sb.classList.add('show');
+                            setTimeout(() => sb.classList.remove('show'), 2500);
+                        }
+                    </script>
                 </body>
                 </html>
                 """.trimIndent()

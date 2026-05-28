@@ -51,7 +51,7 @@ import com.topjohnwu.magisk.core.R as CoreR
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val navigator = com.topjohnwu.magisk.ui.navigation.LocalNavigator.current
     Scaffold(
         topBar = {
