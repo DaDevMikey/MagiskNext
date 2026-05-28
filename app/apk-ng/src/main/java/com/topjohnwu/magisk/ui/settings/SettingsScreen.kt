@@ -241,39 +241,37 @@ private fun MagiskSection(viewModel: SettingsViewModel) {
             onClick = { viewModel.createHosts() }
         )
 
-        if (Const.Version.atLeast_24_0() || Config.fakeRoot) {
-            // Zygisk
-            var zygisk by remember { mutableStateOf(Config.zygisk) }
-            SettingsSwitch(
-                title = stringResource(CoreR.string.zygisk),
-                summary = stringResource(
-                    if (zygisk != Info.isZygiskEnabled) CoreR.string.reboot_apply_change
-                    else CoreR.string.settings_zygisk_summary
-                ),
-                checked = zygisk,
-                onCheckedChange = {
-                    zygisk = it
-                    Config.zygisk = it
-                    viewModel.notifyZygiskChange()
-                }
-            )
+        // Zygisk
+        var zygisk by remember { mutableStateOf(Config.zygisk) }
+        SettingsSwitch(
+            title = stringResource(CoreR.string.zygisk),
+            summary = stringResource(
+                if (zygisk != Info.isZygiskEnabled) CoreR.string.reboot_apply_change
+                else CoreR.string.settings_zygisk_summary
+            ),
+            checked = zygisk,
+            onCheckedChange = {
+                zygisk = it
+                Config.zygisk = it
+                viewModel.notifyZygiskChange()
+            }
+        )
 
-            // DenyList
-            val denyListEnabled by viewModel.denyListEnabled.collectAsState()
-            SettingsSwitch(
-                title = stringResource(CoreR.string.settings_denylist_title),
-                summary = stringResource(CoreR.string.settings_denylist_summary),
-                checked = denyListEnabled,
-                onCheckedChange = { viewModel.toggleDenyList(it) }
-            )
+        // DenyList
+        val denyListEnabled by viewModel.denyListEnabled.collectAsState()
+        SettingsSwitch(
+            title = stringResource(CoreR.string.settings_denylist_title),
+            summary = stringResource(CoreR.string.settings_denylist_summary),
+            checked = denyListEnabled,
+            onCheckedChange = { viewModel.toggleDenyList(it) }
+        )
 
-            // DenyList Config
-            SettingsArrow(
-                title = stringResource(CoreR.string.settings_denylist_config_title),
-                summary = stringResource(CoreR.string.settings_denylist_config_summary),
-                onClick = { viewModel.navigateToDenyList() }
-            )
-        }
+        // DenyList Config
+        SettingsArrow(
+            title = stringResource(CoreR.string.settings_denylist_config_title),
+            summary = stringResource(CoreR.string.settings_denylist_config_summary),
+            onClick = { viewModel.navigateToDenyList() }
+        )
     }
 }
 

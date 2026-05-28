@@ -53,7 +53,9 @@ class WebUIActivity : ComponentActivity() {
         
         if (com.topjohnwu.magisk.core.Config.fakeRoot && moduleId == "fake_module") {
             val fakeWebroot = File(com.topjohnwu.magisk.core.AppContext.cacheDir, "fake_module/webroot")
-            Shell.cmd("cp -rf ${fakeWebroot.absolutePath}/* ${cacheDir.absolutePath}").exec()
+            if (fakeWebroot.exists()) {
+                fakeWebroot.copyRecursively(cacheDir, overwrite = true)
+            }
         } else {
             // Copy webroot from /data/adb/modules/<id>/webroot to cache
             Shell.cmd("cp -rf /data/adb/modules/$moduleId/webroot/* ${cacheDir.absolutePath}").exec()
