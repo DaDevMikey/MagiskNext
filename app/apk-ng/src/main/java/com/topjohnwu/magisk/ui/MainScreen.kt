@@ -76,7 +76,7 @@ fun MainScreen(initialTab: Int = Tab.HOME.ordinal) {
         Tab.entries.filter { tab ->
             when (tab) {
                 Tab.SU_DASHBOARD -> com.topjohnwu.magisk.core.Config.fakeRoot || Info.showSuperUser || (Info.env.isActive && LocalModule.loaded())
-                Tab.TOOLBOX -> com.topjohnwu.magisk.core.Config.fakeRoot || Info.env.isActive
+                Tab.TOOLBOX -> com.topjohnwu.magisk.core.Config.enableToolbox && (com.topjohnwu.magisk.core.Config.fakeRoot || Info.env.isActive)
                 else -> true
             }
         }

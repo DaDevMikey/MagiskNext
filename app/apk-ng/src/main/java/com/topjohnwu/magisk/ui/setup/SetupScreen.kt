@@ -64,6 +64,12 @@ fun SetupScreen(onFinishSetup: () -> Unit) {
                 content = { ModuleHubMockup() }
             ),
             SetupPageData(
+                icon = androidx.compose.material.icons.outlined.Science,
+                title = "Experimental Labs",
+                subtitle = "Opt-in to cutting edge tools like the new Ultimate Toolbox in Settings > Experimental.",
+                content = { LabsMockup() }
+            ),
+            SetupPageData(
                 icon = Icons.Default.Person,
                 title = "Choose Your Profile",
                 subtitle = "We can pre-configure Magisk Next based on how you plan to use it.",
@@ -400,6 +406,26 @@ private fun ThemeSetting() {
                     Text("Magisk Next", color = if (colorMode != 1) Color.White else Color.Black, fontWeight = FontWeight.Medium)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun LabsMockup() {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Experimental Features",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "Once you finish setup, head over to Settings -> Experimental to unlock bleeding-edge tools like the Ultimate Toolbox, built-in App Downgrader, and more!",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

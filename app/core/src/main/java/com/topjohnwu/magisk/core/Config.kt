@@ -49,6 +49,7 @@ object Config : PreferenceConfig, DBConfig {
         const val DEVELOPER_MODE = "developer_mode"
         const val FAKE_ROOT = "fake_root"
         const val IS_FIRST_LAUNCH = "is_first_launch"
+        const val ENABLE_TOOLBOX = "enable_toolbox"
 
         val NO_MIGRATION = setOf(ASKED_HOME, SU_REQUEST_TIMEOUT,
             SU_AUTO_RESPONSE, SU_REAUTH, SU_TAPJACK)
@@ -57,6 +58,10 @@ object Config : PreferenceConfig, DBConfig {
     var isFirstLaunch: Boolean
         get() = prefs.getBoolean(Key.IS_FIRST_LAUNCH, true)
         set(value) = prefs.edit { putBoolean(Key.IS_FIRST_LAUNCH, value) }
+
+    var enableToolbox: Boolean
+        get() = prefs.getBoolean(Key.ENABLE_TOOLBOX, false)
+        set(value) = prefs.edit { putBoolean(Key.ENABLE_TOOLBOX, value) }
 
     object OldValue {
         // Update channels

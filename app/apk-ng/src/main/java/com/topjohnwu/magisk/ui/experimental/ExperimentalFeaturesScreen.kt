@@ -91,6 +91,36 @@ fun ExperimentalFeaturesScreen(navigator: Navigator, onBack: () -> Unit) {
                 description = "Create simple modules directly from your device.",
                 onClick = { navigator.push(Route.ModuleCreator) }
             )
+
+            var toolboxEnabled by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(com.topjohnwu.magisk.core.Config.enableToolbox) }
+            Card(
+                modifier = Modifier.fillMaxWidth().animateContentSize(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+                shape = MaterialTheme.shapes.large
+            ) {
+                Row(
+                    modifier = Modifier.padding(20.dp).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    FilledTonalIconButton(onClick = {}) {
+                        Icon(Icons.Outlined.Science, contentDescription = null)
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Enable Toolbox Tab", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                        Text("Add the advanced root power tools tab to your bottom navigation.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Switch(
+                        checked = toolboxEnabled,
+                        onCheckedChange = {
+                            toolboxEnabled = it
+                            com.topjohnwu.magisk.core.Config.enableToolbox = it
+                            // Tell user a restart is needed for the tab to show up cleanly
+                            android.widget.Toast.makeText(com.topjohnwu.magisk.core.Config.context, "Restart the app to apply changes.", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
+            }
         }
     }
 }
