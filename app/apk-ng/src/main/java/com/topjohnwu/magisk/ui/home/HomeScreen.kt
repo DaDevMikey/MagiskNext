@@ -191,7 +191,7 @@ fun HomeScreen(viewModel: HomeViewModel, installVm: InstallViewModel) {
                 title = { Text(stringResource(CoreR.string.section_home)) },
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    if (Info.isRooted) {
+                    if (Info.isRooted || Config.fakeRoot) {
                         RebootButton()
                     }
                 }

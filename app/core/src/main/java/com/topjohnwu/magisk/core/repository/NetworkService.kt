@@ -71,12 +71,12 @@ class NetworkService(
             it.name.run { endsWith(".apk") && !contains("debug") }
         }): UpdateInfo {
         return if (this == null) UpdateInfo()
-        else if (tag[0] == 'v') asPublicInfo(selector)
+        else if (tag[0] == 'v' || tag[0].isDigit()) asPublicInfo(selector)
         else asCanaryInfo(selector)
     }
 
     private inline fun Release.asPublicInfo(selector: (ReleaseAssets) -> Boolean): UpdateInfo {
-        val version = tag.drop(1)
+        val version = if (tag[0] == 'v') tag.drop(1) else tag
         val date = dateFormat.format(createdTime)
         return UpdateInfo(
             version = version,

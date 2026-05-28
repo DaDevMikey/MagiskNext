@@ -5,7 +5,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,6 +30,10 @@ fun ModuleHubScreen(
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
+    var searchQuery by remember { mutableStateOf("") }
+    var sortOption by remember { mutableStateOf(SortOption.NAME) }
+    var showSortMenu by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -38,6 +44,22 @@ fun ModuleHubScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showSortMenu = true }) {
+                        Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort")
+                    }
+                    DropdownMenu(
+                        expanded = showSortMenu,
+                        onDismissRequest = { showSortMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Sort by Name") },
+                            onClick = { sortOption = SortOption.NAME; showSortMenu = false }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Sort by Author") },
+                            onClick = { sortOption = SortOption.AUTHOR; showSortMenu = false }
+                        )
+                    }
                     IconButton(onClick = { viewModel.refresh() }) {
                         if (viewModel.isLoading) {
                             CircularProgressIndicator(
@@ -54,37 +76,67 @@ fun ModuleHubScreen(
             )
         }
     ) { innerPadding ->
-        if (viewModel.isError) {
-            Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
-                Text("Failed to load modules from server.", color = MaterialTheme.colorScheme.error)
-            }
-        } else if (viewModel.modules.isEmpty() && !viewModel.isLoading) {
-            Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
-                Text("No modules available yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        } else {
-            LazyColumn(
-                contentPadding = innerPadding,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(viewModel.modules) { module ->
-                    ModuleHubItem(
-                        item = module,
-                        onDownloadClick = {
-                            val subject = OnlineModuleSubject(module, true)
-                            val activity = context as? com.topjohnwu.magisk.ui.MainActivity
-                            if (activity != null) {
-                                DownloadEngine.startWithActivity(activity, subject)
-                            } else {
-                                DownloadEngine.start(context, subject)
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                placeholder = { Text("Search modules...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                singleLine = true,
+                shape = MaterialTheme.shapes.extraLarge
+            )
+
+            if (viewModel.isError) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Failed to load modules from server.", color = MaterialTheme.colorScheme.error)
+                }
+            } else if (viewModel.modules.isEmpty() && !viewModel.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No modules available yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else {
+                val filteredModules = remember(viewModel.modules, searchQuery, sortOption) {
+                    viewModel.modules
+                        .filter {
+                            it.name.contains(searchQuery, ignoreCase = true) ||
+                            it.author.contains(searchQuery, ignoreCase = true) ||
+                            it.description.contains(searchQuery, ignoreCase = true)
+                        }
+                        .let { list ->
+                            when (sortOption) {
+                                SortOption.NAME -> list.sortedBy { it.name.lowercase() }
+                                SortOption.AUTHOR -> list.sortedBy { it.author.lowercase() }
                             }
                         }
-                    )
+                }
+                
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(filteredModules) { module ->
+                        ModuleHubItem(
+                            item = module,
+                            onDownloadClick = {
+                                val subject = OnlineModuleSubject(module, true)
+                                val activity = context as? com.topjohnwu.magisk.ui.MainActivity
+                                if (activity != null) {
+                                    DownloadEngine.startWithActivity(activity, subject)
+                                } else {
+                                    DownloadEngine.start(context, subject)
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
     }
 }
+
+enum class SortOption { NAME, AUTHOR }
 
 @Composable
 private fun ModuleHubItem(item: OnlineModule, onDownloadClick: () -> Unit) {
