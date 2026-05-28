@@ -2,7 +2,11 @@
 
 Magisk Next is a fork of Magisk that focuses on native stealth, improved module development experience, and safety.
 
-## Features
+## Getting Started
+
+- [User Guide and Features](features.md): Discover EVERYTHING you can do with Magisk Next, including Toolbox, Batch Uninstall, App Downgrading, Bootloop Protection, App Profiles, SuList vs DenyList, Unmounting modules per app, and more.
+
+## Highlights
 
 ### Native Stealth
 By integrating unmounting and process isolation natively within the Magisk daemon, Magisk Next eliminates the need for stacking multiple modules like Zygisk, Shamiko, and Play Integrity Fix to hide root from apps.
