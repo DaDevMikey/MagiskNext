@@ -241,7 +241,7 @@ private fun MagiskSection(viewModel: SettingsViewModel) {
             onClick = { viewModel.createHosts() }
         )
 
-        if (Const.Version.atLeast_24_0()) {
+        if (Const.Version.atLeast_24_0() || Config.fakeRoot) {
             // Zygisk
             var zygisk by remember { mutableStateOf(Config.zygisk) }
             SettingsSwitch(
