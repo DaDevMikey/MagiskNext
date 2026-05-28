@@ -113,8 +113,10 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
         setContent {
             MagiskTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    val startRoute = if (Config.isFirstLaunch) Route.Setup else Route.Main
+                    val startRoute = Route.Main
                     val navigator = rememberNavigator(startRoute)
+                    var showSetup by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(Config.isFirstLaunch) }
+
                     CompositionLocalProvider(LocalNavigator provides navigator) {
                         HandleFlashIntent(navigator)
 
@@ -126,15 +128,6 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                                 rememberViewModelStoreNavEntryDecorator<Any>()
                             ),
                             entryProvider = entryProvider {
-                                entry<Route.Setup> {
-                                    com.topjohnwu.magisk.ui.setup.SetupScreen(
-                                        onFinishSetup = {
-                                            Config.isFirstLaunch = false
-                                            navigator.backStack.clear()
-                                            navigator.backStack.add(Route.Main)
-                                        }
-                                    )
-                                }
                                 entry<Route.Main> {
                                     MainScreen(initialTab = initialTab)
                                 }
@@ -194,6 +187,15 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                         )
                     }
                     MainActivityDialogs(activity = this@MainActivity)
+                    
+                    if (showSetup) {
+                        com.topjohnwu.magisk.ui.setup.SetupScreen(
+                            onFinishSetup = {
+                                Config.isFirstLaunch = false
+                                showSetup = false
+                            }
+                        )
+                    }
                 }
             }
         }
