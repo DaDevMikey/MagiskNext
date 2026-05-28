@@ -91,6 +91,47 @@ class ModuleViewModel : AsyncLoadViewModel() {
                 fakeLocalModule.javaClass.superclass?.getDeclaredField("name")?.apply { isAccessible = true }?.set(fakeLocalModule, "Fake Module")
                 fakeLocalModule.javaClass.superclass?.getDeclaredField("version")?.apply { isAccessible = true }?.set(fakeLocalModule, "1.0.0")
                 fakeLocalModule.javaClass.superclass?.getDeclaredField("versionCode")?.apply { isAccessible = true }?.set(fakeLocalModule, 1)
+
+                // Inject a fake webroot for the mock UI
+                val webroot = com.topjohnwu.magisk.core.utils.RootUtils.fs.getFile(fakeModuleDir.absolutePath, "webroot")
+                webroot.mkdirs()
+                val indexHtml = com.topjohnwu.magisk.core.utils.RootUtils.fs.getFile(webroot.absolutePath, "index.html")
+                indexHtml.writeText(
+                    """
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Fake Module Dashboard</title>
+                        <style>
+                            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #121212; color: #ffffff; padding: 20px; }
+                            h1 { font-weight: 300; }
+                            .card { background: #1e1e1e; border-radius: 12px; padding: 20px; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+                            button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 16px; margin-top: 10px; cursor: pointer; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Mock Dashboard</h1>
+                        <p>This is a functional test of the MagiskNext WebUI Bridge.</p>
+                        <div class="card">
+                            <h3>Test Root Access</h3>
+                            <button onclick="testRoot()">Run 'id' Command</button>
+                            <pre id="output" style="margin-top: 15px; background: #000; padding: 10px; border-radius: 6px;"></pre>
+                        </div>
+                        <script>
+                            function testRoot() {
+                                try {
+                                    document.getElementById('output').innerText = MagiskJS.exec('id');
+                                } catch(e) {
+                                    document.getElementById('output').innerText = 'Error: ' + e.message;
+                                }
+                            }
+                        </script>
+                    </body>
+                    </html>
+                    """.trimIndent()
+                )
             } catch (e: Exception) {
                 // Ignore
             }

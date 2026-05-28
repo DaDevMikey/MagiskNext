@@ -1,5 +1,8 @@
 package com.topjohnwu.magisk.ui.module
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -14,12 +17,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import android.widget.Toast
+import androidx.core.content.FileProvider
+import com.topjohnwu.magisk.core.AppContext
+import com.topjohnwu.magisk.core.Const
+import com.topjohnwu.magisk.ui.navigation.LocalNavigator
+import com.topjohnwu.magisk.ui.navigation.Route
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModuleCreatorScreen(onBack: () -> Unit) {
     val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val coroutineScope = rememberCoroutineScope()
     var id by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
     var version by remember { mutableStateOf("") }
@@ -28,11 +44,48 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
     var description by remember { mutableStateOf("") }
     var script by remember { mutableStateOf("#!/system/bin/sh\n# Write your shell script here\n") }
 
+    var showMenu by remember { mutableStateOf(false) }
+    var createdZipUri by remember { mutableStateOf<Uri?>(null) }
+
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris ->
         if (uris.isNotEmpty()) {
             Toast.makeText(context, "Selected ${uris.size} files", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    if (showMenu && createdZipUri != null) {
+        ModalBottomSheet(onDismissRequest = { showMenu = false }) {
+            Column(modifier = Modifier.padding(24.dp).padding(bottom = 32.dp)) {
+                Text("Module Created!", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        showMenu = false
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "application/zip"
+                            putExtra(Intent.EXTRA_STREAM, createdZipUri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Share Module"))
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Share Module Zip")
+                }
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        showMenu = false
+                        navigator.push(Route.Flash(action = Const.Value.FLASH_ZIP, additionalData = createdZipUri.toString()))
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                ) {
+                    Text("Install Module")
+                }
+            }
         }
     }
 
@@ -53,8 +106,32 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
-                    Toast.makeText(context, "Building Module...", Toast.LENGTH_SHORT).show()
-                    // Mock build action
+                    coroutineScope.launch {
+                        val uri = withContext(Dispatchers.IO) {
+                            try {
+                                val moduleProp = "id=$id\nname=$title\nversion=$version\nversionCode=$versionCode\nauthor=$creator\ndescription=$description\n"
+                                val zipFile = File(AppContext.cacheDir, "created_module.zip")
+                                ZipOutputStream(FileOutputStream(zipFile)).use { zos ->
+                                    zos.putNextEntry(ZipEntry("module.prop"))
+                                    zos.write(moduleProp.toByteArray())
+                                    zos.closeEntry()
+                                    
+                                    zos.putNextEntry(ZipEntry("customize.sh"))
+                                    zos.write(script.toByteArray())
+                                    zos.closeEntry()
+                                }
+                                FileProvider.getUriForFile(context, "${context.packageName}.provider", zipFile)
+                            } catch (e: Exception) {
+                                null
+                            }
+                        }
+                        if (uri != null) {
+                            createdZipUri = uri
+                            showMenu = true
+                        } else {
+                            Toast.makeText(context, "Failed to build module", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
             ) {
                 Text("Build Module")
@@ -127,7 +204,7 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
                 minLines = 3
             )
 
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             Text(
                 "Module Logic",
@@ -138,7 +215,7 @@ fun ModuleCreatorScreen(onBack: () -> Unit) {
             OutlinedTextField(
                 value = script,
                 onValueChange = { script = it },
-                label = { Text("script.sh (Optional)") },
+                label = { Text("customize.sh (Optional)") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 200.dp),

@@ -113,7 +113,7 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                     CompositionLocalProvider(LocalNavigator provides navigator) {
                         HandleFlashIntent(navigator)
 
-                        NavDisplay(
+                        androidx.navigation3.ui.NavDisplay(
                             backStack = navigator.backStack,
                             onBack = { navigator.pop() },
                             entryDecorators = listOf(

@@ -134,13 +134,31 @@ fun ModuleScreen(viewModel: ModuleViewModel, innerPadding: PaddingValues? = null
     val content = @Composable { padding: PaddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
             if (uiState.loading) {
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
+                        .padding(padding)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    CircularProgressIndicator()
+                    repeat(6) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                            colors = androidx.compose.material3.CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            )
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.alpha(0.3f))
+                            }
+                        }
+                    }
                 }
             } else if (uiState.modules.isEmpty()) {
                 Box(

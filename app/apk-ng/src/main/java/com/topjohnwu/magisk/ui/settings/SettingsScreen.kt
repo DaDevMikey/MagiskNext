@@ -174,41 +174,7 @@ private fun AppSettingsSection(navigator: com.topjohnwu.magisk.ui.navigation.Nav
             summary = stringResource(CoreR.string.logs),
             onClick = { navigator.push(com.topjohnwu.magisk.ui.navigation.Route.Log) }
         )
-        // Update Channel
-        val updateChannelEntries = remember {
-            resources.getStringArray(CoreR.array.update_channel).toList()
-        }
-        var updateChannel by remember {
-            mutableIntStateOf(Config.updateChannel.coerceIn(0, updateChannelEntries.size - 1))
-        }
-        var showUrlDialog by remember { mutableStateOf(false) }
 
-        SettingsDropdown(
-            title = stringResource(CoreR.string.settings_update_channel_title),
-            items = updateChannelEntries,
-            selectedIndex = updateChannel,
-            onSelectedIndexChange = { index ->
-                updateChannel = index
-                Config.updateChannel = index
-                Info.resetUpdate()
-                if (index == Config.Value.CUSTOM_CHANNEL && Config.customChannelUrl.isBlank()) {
-                    showUrlDialog = true
-                }
-            }
-        )
-
-        // Update Channel URL (for custom channel)
-        if (updateChannel == Config.Value.CUSTOM_CHANNEL) {
-            UpdateChannelUrlDialog(
-                show = showUrlDialog,
-                onDismiss = { showUrlDialog = false }
-            )
-            SettingsArrow(
-                title = stringResource(CoreR.string.settings_update_custom),
-                summary = Config.customChannelUrl.ifBlank { null },
-                onClick = { showUrlDialog = true }
-            )
-        }
 
         // DoH Toggle
         var doh by remember { mutableStateOf(Config.doh) }
@@ -512,11 +478,28 @@ private fun DeveloperSection() {
             title = "Fake Root",
             summary = "Simulates root access in UI without actual privileges (App restart required)",
             checked = fakeRoot,
-            onCheckedChange = { 
+            onCheckedChange = {
                 fakeRoot = it
                 Config.fakeRoot = it
             }
         )
+        
+        var forceVerbose by remember { mutableStateOf(false) }
+        SettingsSwitch(
+            title = "Force Verbose Logging",
+            summary = "Always output TRACE level daemon logs to logcat",
+            checked = forceVerbose,
+            onCheckedChange = { forceVerbose = it }
+        )
+        
+        var disableSignature by remember { mutableStateOf(false) }
+        SettingsSwitch(
+            title = "Disable Signature Verification",
+            summary = "Allow flashing unsigned or malformed zips in Module Hub",
+            checked = disableSignature,
+            onCheckedChange = { disableSignature = it }
+        )
+
     }
 }
 

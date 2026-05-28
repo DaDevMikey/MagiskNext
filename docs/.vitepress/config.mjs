@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
+  base: '/MagiskNext/',
   title: "Magisk Next",
   description: "The Next Generation of Root",
   themeConfig: {
