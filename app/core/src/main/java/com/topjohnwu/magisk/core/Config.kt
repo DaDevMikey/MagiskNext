@@ -48,10 +48,15 @@ object Config : PreferenceConfig, DBConfig {
         const val RAND_NAME = "rand_name"
         const val DEVELOPER_MODE = "developer_mode"
         const val FAKE_ROOT = "fake_root"
+        const val IS_FIRST_LAUNCH = "is_first_launch"
 
         val NO_MIGRATION = setOf(ASKED_HOME, SU_REQUEST_TIMEOUT,
             SU_AUTO_RESPONSE, SU_REAUTH, SU_TAPJACK)
     }
+
+    var isFirstLaunch: Boolean
+        get() = prefs.getBoolean(Key.IS_FIRST_LAUNCH, true)
+        set(value) = prefs.edit { putBoolean(Key.IS_FIRST_LAUNCH, value) }
 
     object OldValue {
         // Update channels

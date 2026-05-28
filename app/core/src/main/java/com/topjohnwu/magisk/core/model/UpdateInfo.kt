@@ -32,8 +32,20 @@ data class ModuleJson(
 )
 
 @JsonClass(generateAdapter = true)
+data class HubModuleJson(
+    val id: String,
+    val name: String,
+    val version: String,
+    val versionCode: Int,
+    val zipUrl: String,
+    val changelog: String,
+    val author: String,
+    val description: String
+)
+
+@JsonClass(generateAdapter = true)
 data class ModuleHubIndex(
-    val modules: List<com.topjohnwu.magisk.core.model.module.OnlineModule>
+    val modules: List<HubModuleJson>
 )
 
 @JsonClass(generateAdapter = true)

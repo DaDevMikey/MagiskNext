@@ -113,7 +113,8 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
         setContent {
             MagiskTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    val navigator = rememberNavigator(Route.Main)
+                    val startRoute = if (Config.isFirstLaunch) Route.Setup else Route.Main
+                    val navigator = rememberNavigator(startRoute)
                     CompositionLocalProvider(LocalNavigator provides navigator) {
                         HandleFlashIntent(navigator)
 
@@ -125,6 +126,15 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                                 rememberViewModelStoreNavEntryDecorator<Any>()
                             ),
                             entryProvider = entryProvider {
+                                entry<Route.Setup> {
+                                    com.topjohnwu.magisk.ui.setup.SetupScreen(
+                                        onFinishSetup = {
+                                            Config.isFirstLaunch = false
+                                            navigator.backStack.clear()
+                                            navigator.backStack.add(Route.Main)
+                                        }
+                                    )
+                                }
                                 entry<Route.Main> {
                                     MainScreen(initialTab = initialTab)
                                 }

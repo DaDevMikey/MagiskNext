@@ -104,7 +104,7 @@ class NetworkService(
     private suspend fun fetchBetaUpdate() = findRelease { true }.asInfo()
 
     private suspend fun fetchDebugUpdate() =
-        findRelease { true }.asInfo { it.name == "app-debug.apk" }
+        findRelease { true }.asInfo { it.name.endsWith(".apk") }
 
     private suspend fun fetchCustomUpdate(url: String): UpdateInfo {
         val info = raw.fetchUpdateJson(url).magisk

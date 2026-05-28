@@ -483,6 +483,16 @@ private fun DeveloperSection() {
             }
         )
         
+        val context = androidx.compose.ui.platform.LocalContext.current
+        SettingsArrow(
+            title = "Reset Setup Screen",
+            summary = "Force the OOBE first-launch setup screen to appear on next restart",
+            onClick = {
+                Config.isFirstLaunch = true
+                android.widget.Toast.makeText(context, "Setup screen reset. Please restart the app.", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        )
+        
         var forceVerbose by remember { mutableStateOf(false) }
         SettingsSwitch(
             title = "Force Verbose Logging",

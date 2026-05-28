@@ -36,7 +36,18 @@ class ModuleHubViewModel : ViewModel() {
                 val index = withContext(Dispatchers.IO) {
                     ServiceLocator.networkService.fetchModuleHubIndex()
                 }
-                modules = index.modules
+                modules = index.modules.map { json ->
+                    OnlineModule(
+                        id = json.id,
+                        name = json.name,
+                        version = json.version,
+                        versionCode = json.versionCode,
+                        zipUrl = json.zipUrl,
+                        changelog = json.changelog,
+                        author = json.author,
+                        description = json.description
+                    )
+                }
             } catch (e: Exception) {
                 Timber.e(e)
                 isError = true
