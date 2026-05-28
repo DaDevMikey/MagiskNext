@@ -64,9 +64,11 @@ import com.topjohnwu.magisk.core.ktx.toTime
 import com.topjohnwu.magisk.core.model.su.SuLog
 import com.topjohnwu.magisk.core.R as CoreR
 
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LogScreen(viewModel: LogViewModel) {
+fun LogScreen(viewModel: LogViewModel, onBack: (() -> Unit)? = null) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tabTitles = listOf(
@@ -79,6 +81,16 @@ fun LogScreen(viewModel: LogViewModel) {
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(CoreR.string.logs)) },
+                navigationIcon = {
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                },
                 actions = {
                     if (selectedTab == 1) {
                         IconButton(onClick = { viewModel.saveMagiskLog() }) {

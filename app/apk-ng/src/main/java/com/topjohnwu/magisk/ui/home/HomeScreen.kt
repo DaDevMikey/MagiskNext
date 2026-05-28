@@ -211,13 +211,12 @@ fun HomeScreen(viewModel: HomeViewModel, installVm: InstallViewModel) {
                 NoticeCard(onHide = viewModel::hideNotice)
             }
 
-            CoreCard(
+            MagiskNextStatusCard(
                 modifier = Modifier.fillMaxWidth(),
                 state = viewModel.magiskState,
                 version = viewModel.magiskInstalledVersion,
-            ) { showInstallSheet.value = true }
-
-            StatusCard()
+                onInstallClicked = { showInstallSheet.value = true }
+            )
 
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -236,20 +235,12 @@ fun HomeScreen(viewModel: HomeViewModel, installVm: InstallViewModel) {
             )
 
             Text(
-                text = stringResource(CoreR.string.home_support_title),
+                text = "Source Code",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp)
             )
-            SupportCard(onLinkClicked = viewModel::onLinkPressed)
-
-            Text(
-                text = stringResource(CoreR.string.home_follow_title),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp)
-            )
-            DevelopersCard(onLinkClicked = viewModel::onLinkPressed)
+            SourceCodeCard(onLinkClicked = viewModel::onLinkPressed)
         }
     }
 
@@ -379,59 +370,111 @@ private fun InstallButton(
 }
 
 @Composable
-private fun CoreCard(
+private fun MagiskNextStatusCard(
     modifier: Modifier = Modifier,
     state: HomeViewModel.State,
     version: String,
     onInstallClicked: () -> Unit,
 ) {
-    val actionLabel = when (state) {
+    val actualState = if (Config.fakeRoot) HomeViewModel.State.UP_TO_DATE else state
+    val actualVersion = if (Config.fakeRoot) com.topjohnwu.magisk.core.BuildConfig.APP_VERSION_NAME else version
+
+    val actionLabel = when (actualState) {
         HomeViewModel.State.OUTDATED -> stringResource(CoreR.string.update)
         HomeViewModel.State.INVALID -> stringResource(CoreR.string.install)
         HomeViewModel.State.UP_TO_DATE -> stringResource(CoreR.string.reinstall)
         HomeViewModel.State.LOADING -> null
     }
 
+    val isWorking = actualState == HomeViewModel.State.UP_TO_DATE || actualState == HomeViewModel.State.OUTDATED
+    val cardColor = if (isWorking) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
+    val onCardColor = if (isWorking) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
+    val iconRes = if (isWorking) Icons.Default.Check else Icons.Default.Close
+
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(24.dp)
+        shape = RoundedCornerShape(28.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = cardColor)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(24.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    painter = painterResource(CoreR.drawable.ic_magisk_outline),
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp)
-                )
-                Spacer(Modifier.width(16.dp))
-                Column {
-                    Text(
-                        text = stringResource(CoreR.string.magisk),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Text(
-                        text = version.ifEmpty { stringResource(CoreR.string.not_available) },
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f), RoundedCornerShape(16.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = iconRes,
+                            contentDescription = null,
+                            tint = onCardColor,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                    Spacer(Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = if (isWorking) "Magisk Next is Working" else "Magisk Next Not Installed",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                            color = onCardColor
+                        )
+                        Text(
+                            text = "Version: " + actualVersion.ifEmpty { stringResource(CoreR.string.not_available) },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = onCardColor.copy(alpha = 0.8f)
+                        )
+                    }
                 }
             }
 
-            if (actionLabel != null) {
-                InstallButton(
-                    label = actionLabel,
-                    onClick = onInstallClicked,
+            Spacer(Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                StatusItem(
+                    label = stringResource(CoreR.string.zygisk),
+                    value = stringResource(if (Info.isZygiskEnabled || Config.fakeRoot) CoreR.string.enabled else CoreR.string.disabled),
+                    color = onCardColor
+                )
+                VerticalDivider(modifier = Modifier.height(32.dp), color = onCardColor.copy(alpha = 0.2f))
+                StatusItem(
+                    label = stringResource(CoreR.string.ramdisk),
+                    value = stringResource(if (Info.ramdisk || Config.fakeRoot) CoreR.string.yes else CoreR.string.no),
+                    color = onCardColor
                 )
             }
+
+            if (actionLabel != null) {
+                Spacer(Modifier.height(24.dp))
+                Button(
+                    onClick = onInstallClicked,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(actionLabel, color = cardColor, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun StatusItem(label: String, value: String, color: androidx.compose.ui.graphics.Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = label, style = MaterialTheme.typography.labelMedium, color = color.copy(alpha = 0.7f))
+        Text(text = value, style = MaterialTheme.typography.titleMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), color = color)
     }
 }
 
@@ -442,7 +485,7 @@ private fun UninstallButton(
 ) {
     Button(
         onClick = onClick,
-        enabled = enabled,
+        enabled = enabled || Config.fakeRoot,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.errorContainer,
             contentColor = MaterialTheme.colorScheme.onErrorContainer
@@ -507,7 +550,7 @@ private fun AppCard(
                     )
                 }
 
-                if (Info.env.isActive) {
+                if (Info.env.isActive || Config.fakeRoot) {
                     val hideRestoreIcon = if (isHidden) Icons.Default.Visibility else Icons.Default.VisibilityOff
                     Spacer(modifier = Modifier.weight(1f))
                     IconButton(onClick = onHideRestorePressed) {
@@ -559,68 +602,15 @@ private fun AppDetailRow(label: String, value: String) {
     }
 }
 
-private data class StatusInfo(val label: String, val status: String)
-
 @Composable
-private fun StatusCard() {
-    val statuses = listOf(
-        StatusInfo(
-            label = stringResource(CoreR.string.zygisk),
-            status = stringResource(if (Info.isZygiskEnabled) CoreR.string.enabled else CoreR.string.disabled)
-        ),
-        StatusInfo(
-            label = stringResource(CoreR.string.ramdisk),
-            status = stringResource(if (Info.ramdisk) CoreR.string.yes else CoreR.string.no)
-        )
-    )
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Min),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            statuses.forEachIndexed { index, info ->
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = info.label,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Text(
-                        text = info.status,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-                if (index < statuses.lastIndex) {
-                    VerticalDivider(
-                        thickness = 0.5.dp,
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SupportCard(onLinkClicked: (String) -> Unit) {
+private fun SourceCodeCard(onLinkClicked: (String) -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = stringResource(CoreR.string.home_support_content),
+                text = "Magisk Next is an open source project. View the source code for both Magisk Next and Stock Magisk below.",
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(Modifier.height(16.dp))
@@ -629,90 +619,23 @@ private fun SupportCard(onLinkClicked: (String) -> Unit) {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { onLinkClicked(Const.Url.PATREON_URL) }) {
-                    Icon(
-                        painter = painterResource(CoreR.drawable.ic_patreon),
-                        contentDescription = stringResource(CoreR.string.patreon),
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-                IconButton(onClick = { onLinkClicked("https://paypal.me/magiskdonate") }) {
-                    Icon(
-                        painter = painterResource(CoreR.drawable.ic_paypal),
-                        contentDescription = stringResource(CoreR.string.paypal),
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-private data class LinkInfo(val label: Int, val icon: Int, val url: String)
-private data class DeveloperInfo(val name: String, val links: List<LinkInfo>)
-
-private val developers = listOf(
-    DeveloperInfo("topjohnwu", listOf(
-        LinkInfo(CoreR.string.twitter, CoreR.drawable.ic_twitter, "https://twitter.com/topjohnwu"),
-        LinkInfo(CoreR.string.github, CoreR.drawable.ic_github, Const.Url.SOURCE_CODE_URL),
-    )),
-    DeveloperInfo("vvb2060", listOf(
-        LinkInfo(CoreR.string.twitter, CoreR.drawable.ic_twitter, "https://twitter.com/vvb2060"),
-        LinkInfo(CoreR.string.github, CoreR.drawable.ic_github, "https://github.com/vvb2060"),
-    )),
-    DeveloperInfo("yujincheng08", listOf(
-        LinkInfo(CoreR.string.sponsor, CoreR.drawable.ic_favorite, "https://github.com/sponsors/yujincheng08"),
-        LinkInfo(CoreR.string.twitter, CoreR.drawable.ic_twitter, "https://twitter.com/shanasaimoe"),
-        LinkInfo(CoreR.string.github, CoreR.drawable.ic_github, "https://github.com/yujincheng08"),
-    )),
-    DeveloperInfo("rikkawww", listOf(
-        LinkInfo(CoreR.string.twitter, CoreR.drawable.ic_twitter, "https://twitter.com/rikkawww"),
-        LinkInfo(CoreR.string.github, CoreR.drawable.ic_github, "https://github.com/rikkawww"),
-    )),
-    DeveloperInfo("canyie", listOf(
-        LinkInfo(CoreR.string.twitter, CoreR.drawable.ic_twitter, "https://twitter.com/canyie2977"),
-        LinkInfo(CoreR.string.github, CoreR.drawable.ic_github, "https://github.com/canyie"),
-    )),
-)
-
-@Composable
-private fun DevelopersCard(onLinkClicked: (String) -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp)
-    ) {
-        Column {
-            developers.forEachIndexed { index, dev ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                Button(
+                    onClick = { onLinkClicked("https://github.com/DaDevMikey/MagiskNext") },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text(
-                        text = "@${dev.name}",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        dev.links.forEach { link ->
-                            IconButton(onClick = { onLinkClicked(link.url) }) {
-                                Icon(
-                                    painter = painterResource(link.icon),
-                                    contentDescription = stringResource(link.label),
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        }
-                    }
+                    Icon(painterResource(CoreR.drawable.ic_github), contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("MagiskNext")
                 }
-                if (index < developers.lastIndex) {
-                    HorizontalDivider(
-                        thickness = 0.5.dp,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
+                Button(
+                    onClick = { onLinkClicked("https://github.com/topjohnwu/Magisk") },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(painterResource(CoreR.drawable.ic_github), contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Stock Magisk")
                 }
             }
         }

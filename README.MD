@@ -21,7 +21,16 @@ Some highlight features:
 ## Useful Links
 
 - [Installation Instruction](https://topjohnwu.github.io/Magisk/install.html)
-- [Building and Development](https://topjohnwu.github.io/Magisk/build.html)
+## Developer Documentation
+
+For full guides on how to implement the Module Hub, WebUI Bridge, Action Scripts, and Banners into your modules, please see our dedicated [Documentation Website](https://dadevmikey.github.io/MagiskNext/).
+
+Alternatively, you can run the documentation locally:
+```bash
+cd docs
+npm install
+npm run docs:dev
+```
 - [Magisk Documentation](https://topjohnwu.github.io/Magisk/)
 - [Zygisk module sample](https://github.com/topjohnwu/zygisk-module-sample)
 

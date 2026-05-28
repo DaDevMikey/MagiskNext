@@ -76,6 +76,33 @@ class SuperuserViewModel(
         }
         _uiState.update { it.copy(loading = true) }
         withContext(Dispatchers.IO) {
+            if (Config.fakeRoot) {
+                val fakePolicies = ArrayList<PolicyItem>()
+                val pm = AppContext.packageManager
+                val packages = pm.getInstalledPackages(0)
+                packages.take(15).forEachIndexed { i, pkgInfo ->
+                    val appInfo = pkgInfo.applicationInfo ?: return@forEachIndexed
+                    if (appInfo.uid == Process.myUid()) return@forEachIndexed
+                    val policy = SuPolicy(uid = appInfo.uid)
+                    policy.policy = if (i % 3 == 0) SuPolicy.ALLOW else SuPolicy.DENY
+                    fakePolicies.add(
+                        PolicyItem(
+                            policy = policy,
+                            packageName = pkgInfo.packageName,
+                            isSharedUid = false,
+                            icon = appInfo.loadIcon(pm),
+                            appName = appInfo.getLabel(pm)
+                        )
+                    )
+                }
+                fakePolicies.sortWith(compareBy(
+                    { it.appName.lowercase(Locale.ROOT) },
+                    { it.packageName }
+                ))
+                _uiState.update { it.copy(loading = false, policies = fakePolicies, suRestrict = false) }
+                return@withContext
+            }
+
             db.deleteOutdated()
             db.delete(AppContext.applicationInfo.uid)
             val policies = ArrayList<PolicyItem>()

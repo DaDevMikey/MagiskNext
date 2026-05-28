@@ -46,6 +46,8 @@ object Config : PreferenceConfig, DBConfig {
         const val ASKED_HOME = "asked_home"
         const val DOH = "doh"
         const val RAND_NAME = "rand_name"
+        const val DEVELOPER_MODE = "developer_mode"
+        const val FAKE_ROOT = "fake_root"
 
         val NO_MIGRATION = setOf(ASKED_HOME, SU_REQUEST_TIMEOUT,
             SU_AUTO_RESPONSE, SU_REAUTH, SU_TAPJACK)
@@ -111,6 +113,8 @@ object Config : PreferenceConfig, DBConfig {
     var darkTheme by preference(Key.DARK_THEME, -1)
     var themeOrdinal by preference(Key.THEME_ORDINAL, 0)
     var colorMode by preference(Key.COLOR_MODE, 0)
+    var developerMode by preference(Key.DEVELOPER_MODE, false)
+    var fakeRoot by preference(Key.FAKE_ROOT, false)
 
     private var checkUpdatePrefs by preference(Key.CHECK_UPDATES, true)
     private var localePrefs by preference(Key.LOCALE, "")

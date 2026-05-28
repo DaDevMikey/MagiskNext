@@ -16,3 +16,8 @@ native/out
 ramdisk.img
 app/core/src/debug
 app/core/src/release
+
+# Docs
+docs/node_modules
+docs/.vitepress/dist
+docs/.vitepress/cache

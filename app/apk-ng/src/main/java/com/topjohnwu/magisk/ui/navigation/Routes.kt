@@ -16,6 +16,22 @@ sealed interface Route : NavKey, Parcelable {
 
     @Parcelize
     @Serializable
+    data object Log : Route
+
+    @Parcelize
+    @Serializable
+    data object ModuleHub : Route
+
+    @Parcelize
+    @Serializable
+    data object ExperimentalFeatures : Route
+
+    @Parcelize
+    @Serializable
+    data object ModuleCreator : Route
+
+    @Parcelize
+    @Serializable
     data class Flash(
         val action: String,
         val additionalData: String? = null,

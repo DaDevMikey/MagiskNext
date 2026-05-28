@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
@@ -78,7 +79,7 @@ import com.topjohnwu.magisk.core.R as CoreR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ModuleScreen(viewModel: ModuleViewModel) {
+fun ModuleScreen(viewModel: ModuleViewModel, innerPadding: PaddingValues? = null) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val colorScheme = MaterialTheme.colorScheme
@@ -130,19 +131,64 @@ fun ModuleScreen(viewModel: ModuleViewModel) {
         )
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(CoreR.string.modules)) },
-                scrollBehavior = scrollBehavior
-            )
-        },
-        floatingActionButton = {
+    val content = @Composable { padding: PaddingValues ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (uiState.loading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else if (uiState.modules.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(CoreR.string.module_empty),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                        .padding(padding)
+                        .padding(horizontal = 12.dp),
+                    contentPadding = PaddingValues(bottom = 160.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item { Spacer(Modifier.height(4.dp)) }
+                    items(uiState.modules, key = { it.module.id }) { item ->
+                        ModuleCard(
+                            item = item,
+                            viewModel = viewModel,
+                            onUpdateClick = { onlineModule ->
+                                if (onlineModule != null && Info.isConnected.value == true) {
+                                    pendingOnlineModule = onlineModule
+                                    showOnlineDialog.value = true
+                                }
+                            }
+                        )
+                    }
+                    item { Spacer(Modifier.height(4.dp)) }
+                }
+            }
+
+            // FAB
             FloatingActionButton(
                 onClick = { filePicker.launch("application/zip") },
                 shape = CircleShape,
                 modifier = Modifier
-                    .padding(bottom = 88.dp, end = 20.dp)
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = padding.calculateBottomPadding() + 88.dp, end = 20.dp)
                     .border(0.05.dp, colorScheme.outline.copy(alpha = 0.5f), CircleShape),
                 content = {
                     Icon(
@@ -154,58 +200,20 @@ fun ModuleScreen(viewModel: ModuleViewModel) {
                 },
             )
         }
-    ) { padding ->
-        if (uiState.loading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-            return@Scaffold
-        }
+    }
 
-        if (uiState.modules.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(CoreR.string.module_empty),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = colorScheme.onSurfaceVariant
+    if (innerPadding != null) {
+        content(innerPadding)
+    } else {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(CoreR.string.modules)) },
+                    scrollBehavior = scrollBehavior
                 )
             }
-            return@Scaffold
-        }
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .padding(padding)
-                .padding(horizontal = 12.dp),
-            contentPadding = PaddingValues(bottom = 160.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            item { Spacer(Modifier.height(4.dp)) }
-            items(uiState.modules, key = { it.module.id }) { item ->
-                ModuleCard(
-                    item = item,
-                    viewModel = viewModel,
-                    onUpdateClick = { onlineModule ->
-                        if (onlineModule != null && Info.isConnected.value == true) {
-                            pendingOnlineModule = onlineModule
-                            showOnlineDialog.value = true
-                        }
-                    }
-                )
-            }
-            item { Spacer(Modifier.height(4.dp)) }
+        ) { padding ->
+            content(padding)
         }
     }
 }
@@ -223,22 +231,32 @@ private fun ModuleCard(item: ModuleItem, viewModel: ModuleViewModel, onUpdateCli
     val removeTint = colorScheme.onErrorContainer.copy(alpha = 0.8f)
     var expanded by rememberSaveable(item.module.id) { mutableStateOf(false) }
     val hasDescription = item.module.description.isNotBlank()
+    val context = LocalContext.current
 
     Card(
         modifier = Modifier.fillMaxWidth().clickable(enabled = hasDescription) { expanded = !expanded },
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Column(modifier = Modifier.alpha(infoAlpha)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 4.dp)
-                ) {
+        Box {
+            if (item.module.banner != null) {
+                coil.compose.AsyncImage(
+                    model = item.module.banner,
+                    contentDescription = "Banner",
+                    modifier = Modifier.fillMaxWidth().height(120.dp).alpha(0.3f),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+            }
+            Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.alpha(infoAlpha)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 4.dp)
+                    ) {
                     Text(
                         text = item.module.name,
                         style = MaterialTheme.typography.bodyLarge,
@@ -325,6 +343,30 @@ private fun ModuleCard(item: ModuleItem, viewModel: ModuleViewModel, onUpdateCli
                             }
                         }
                     }
+                    if (item.hasWebUI) {
+                        Button(
+                            colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primaryContainer),
+                            contentPadding = PaddingValues(horizontal = 10.dp),
+                            onClick = { viewModel.openWebUI(context, item.module.id, item.module.name) },
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Icon(
+                                    modifier = Modifier.size(20.dp),
+                                    imageVector = Icons.Default.Dashboard,
+                                    tint = colorScheme.onPrimaryContainer,
+                                    contentDescription = "Dashboard"
+                                )
+                                Text(
+                                    text = "Dashboard",
+                                    color = colorScheme.onPrimaryContainer,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -390,6 +432,7 @@ private fun ModuleCard(item: ModuleItem, viewModel: ModuleViewModel, onUpdateCli
             }
         }
     }
+}
 }
 
 @Composable

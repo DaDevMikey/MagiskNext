@@ -45,19 +45,12 @@ import com.topjohnwu.magisk.core.R as CoreR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SuperuserScreen(viewModel: SuperuserViewModel) {
+fun SuperuserScreen(viewModel: SuperuserViewModel, innerPadding: PaddingValues? = null) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val navigator = LocalNavigator.current
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(CoreR.string.superuser)) },
-                scrollBehavior = scrollBehavior
-            )
-        }
-    ) { padding ->
+    val content = @Composable { padding: PaddingValues ->
         if (uiState.loading) {
             Box(
                 modifier = Modifier
@@ -67,10 +60,7 @@ fun SuperuserScreen(viewModel: SuperuserViewModel) {
             ) {
                 CircularProgressIndicator()
             }
-            return@Scaffold
-        }
-
-        if (uiState.policies.isEmpty()) {
+        } else if (uiState.policies.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -83,27 +73,41 @@ fun SuperuserScreen(viewModel: SuperuserViewModel) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            return@Scaffold
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .padding(padding)
+                    .padding(horizontal = 12.dp),
+                contentPadding = PaddingValues(bottom = 88.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item { Spacer(Modifier.height(4.dp)) }
+                items(uiState.policies, key = { "${it.policy.uid}_${it.packageName}" }) { item ->
+                    PolicyCard(
+                        item = item,
+                        onToggle = { viewModel.togglePolicy(item) },
+                        onDetail = { navigator.push(Route.SuperuserDetail(item.policy.uid)) },
+                    )
+                }
+                item { Spacer(Modifier.height(4.dp)) }
+            }
         }
+    }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .padding(padding)
-                .padding(horizontal = 12.dp),
-            contentPadding = PaddingValues(bottom = 88.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            item { Spacer(Modifier.height(4.dp)) }
-            items(uiState.policies, key = { "${it.policy.uid}_${it.packageName}" }) { item ->
-                PolicyCard(
-                    item = item,
-                    onToggle = { viewModel.togglePolicy(item) },
-                    onDetail = { navigator.push(Route.SuperuserDetail(item.policy.uid)) },
+    if (innerPadding != null) {
+        content(innerPadding)
+    } else {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(CoreR.string.superuser)) },
+                    scrollBehavior = scrollBehavior
                 )
             }
-            item { Spacer(Modifier.height(4.dp)) }
+        ) { padding ->
+            content(padding)
         }
     }
 }

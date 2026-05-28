@@ -63,10 +63,8 @@ import kotlinx.coroutines.launch
 import com.topjohnwu.magisk.core.R as CoreR
 
 enum class Tab(val titleRes: Int, val iconRes: Int) {
-    MODULES(CoreR.string.modules, R.drawable.ic_module),
-    SUPERUSER(CoreR.string.superuser, CoreR.drawable.ic_superuser),
     HOME(CoreR.string.section_home, R.drawable.ic_home),
-    LOG(CoreR.string.logs, R.drawable.ic_bug),
+    SU_DASHBOARD(CoreR.string.superuser, CoreR.drawable.ic_superuser),
     SETTINGS(CoreR.string.settings, R.drawable.ic_settings);
 }
 
@@ -76,13 +74,12 @@ fun MainScreen(initialTab: Int = Tab.HOME.ordinal) {
     val visibleTabs = remember {
         Tab.entries.filter { tab ->
             when (tab) {
-                Tab.SUPERUSER -> Info.showSuperUser
-                Tab.MODULES -> Info.env.isActive && LocalModule.loaded()
+                Tab.SU_DASHBOARD -> com.topjohnwu.magisk.core.Config.fakeRoot || Info.showSuperUser || (Info.env.isActive && LocalModule.loaded())
                 else -> true
             }
         }
     }
-    val initialPage = visibleTabs.indexOf(Tab.entries[initialTab]).coerceAtLeast(0)
+    val initialPage = visibleTabs.indexOf(Tab.entries.getOrNull(initialTab) ?: Tab.HOME).coerceAtLeast(0)
     val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { visibleTabs.size })
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -101,27 +98,19 @@ fun MainScreen(initialTab: Int = Tab.HOME.ordinal) {
                     CollectNavEvents(installVm, navigator)
                     HomeScreen(vm, installVm)
                 }
-                Tab.SUPERUSER -> {
+                Tab.SU_DASHBOARD -> {
                     val activity = LocalActivity.current as MainActivity
-                    val vm: SuperuserViewModel = viewModel(viewModelStoreOwner = activity, factory = VMFactory)
+                    val suVm: SuperuserViewModel = viewModel(viewModelStoreOwner = activity, factory = VMFactory)
+                    val modVm: ModuleViewModel = viewModel(factory = VMFactory)
                     LaunchedEffect(Unit) {
-                        vm.authenticate = { onSuccess ->
+                        suVm.authenticate = { onSuccess ->
                             activity.extension.withAuthentication { if (it) onSuccess() }
                         }
-                        vm.startLoading()
+                        suVm.startLoading()
+                        modVm.startLoading()
                     }
-                    SuperuserScreen(vm)
-                }
-                Tab.LOG -> {
-                    val vm: LogViewModel = viewModel(factory = VMFactory)
-                    LaunchedEffect(Unit) { vm.startLoading() }
-                    LogScreen(vm)
-                }
-                Tab.MODULES -> {
-                    val vm: ModuleViewModel = viewModel(factory = VMFactory)
-                    LaunchedEffect(Unit) { vm.startLoading() }
-                    CollectNavEvents(vm, navigator)
-                    ModuleScreen(vm)
+                    CollectNavEvents(modVm, navigator)
+                    com.topjohnwu.magisk.ui.superuser.SuDashboardScreen(suVm, modVm)
                 }
                 Tab.SETTINGS -> {
                     val activity = LocalActivity.current as MainActivity

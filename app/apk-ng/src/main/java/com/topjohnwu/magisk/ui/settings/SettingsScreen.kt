@@ -44,12 +44,15 @@ import com.topjohnwu.magisk.ui.component.SettingsArrow
 import com.topjohnwu.magisk.ui.component.SettingsDropdown
 import com.topjohnwu.magisk.ui.component.SettingsSwitch
 import com.topjohnwu.magisk.ui.component.SmallTitle
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import com.topjohnwu.magisk.core.R as CoreR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val navigator = com.topjohnwu.magisk.ui.navigation.LocalNavigator.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -69,7 +72,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         ) {
             CustomizationSection(viewModel)
             Spacer(Modifier.height(12.dp))
-            AppSettingsSection()
+            AppSettingsSection(navigator)
             if (Info.env.isActive) {
                 Spacer(Modifier.height(12.dp))
                 MagiskSection(viewModel)
@@ -78,6 +81,19 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 Spacer(Modifier.height(12.dp))
                 SuperuserSection(viewModel)
             }
+            
+            var devMode by remember { mutableStateOf(Config.developerMode) }
+            
+            Spacer(Modifier.height(12.dp))
+            LabsSection(navigator)
+            
+            if (devMode) {
+                Spacer(Modifier.height(12.dp))
+                DeveloperSection()
+            }
+            
+            Spacer(Modifier.height(12.dp))
+            InfoSection(onDevModeUnlocked = { devMode = true })
         }
     }
 }
@@ -147,12 +163,17 @@ private fun CustomizationSection(viewModel: SettingsViewModel) {
 // --- App Settings ---
 
 @Composable
-private fun AppSettingsSection() {
+private fun AppSettingsSection(navigator: com.topjohnwu.magisk.ui.navigation.Navigator) {
     val context = LocalContext.current
     val resources = LocalResources.current
 
     SmallTitle(text = stringResource(CoreR.string.home_app_title))
     Card(modifier = Modifier.fillMaxWidth()) {
+        SettingsArrow(
+            title = stringResource(CoreR.string.logs),
+            summary = stringResource(CoreR.string.logs),
+            onClick = { navigator.push(com.topjohnwu.magisk.ui.navigation.Route.Log) }
+        )
         // Update Channel
         val updateChannelEntries = remember {
             resources.getStringArray(CoreR.array.update_channel).toList()
@@ -463,6 +484,85 @@ private fun SuperuserSection(viewModel: SettingsViewModel) {
                 }
             )
         }
+    }
+}
+
+// --- Labs ---
+
+@Composable
+private fun LabsSection(navigator: com.topjohnwu.magisk.ui.navigation.Navigator) {
+    SmallTitle(text = "Labs")
+    Card(modifier = Modifier.fillMaxWidth()) {
+        SettingsArrow(
+            title = "Experimental Features",
+            summary = "Access work-in-progress tools and features.",
+            onClick = { navigator.push(com.topjohnwu.magisk.ui.navigation.Route.ExperimentalFeatures) }
+        )
+    }
+}
+
+// --- Developer Settings ---
+
+@Composable
+private fun DeveloperSection() {
+    SmallTitle(text = "Developer Settings")
+    Card(modifier = Modifier.fillMaxWidth()) {
+        var fakeRoot by remember { mutableStateOf(Config.fakeRoot) }
+        SettingsSwitch(
+            title = "Fake Root",
+            summary = "Simulates root access in UI without actual privileges (App restart required)",
+            checked = fakeRoot,
+            onCheckedChange = { 
+                fakeRoot = it
+                Config.fakeRoot = it
+            }
+        )
+    }
+}
+
+// --- Info / About ---
+
+@Composable
+private fun InfoSection(onDevModeUnlocked: () -> Unit) {
+    val context = LocalContext.current
+    var tapCount by remember { mutableIntStateOf(0) }
+    var showToast by remember { mutableStateOf(false) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var clickJob: kotlinx.coroutines.Job? by remember { mutableStateOf(null) }
+
+    SmallTitle(text = "About")
+    Card(modifier = Modifier.fillMaxWidth()) {
+        SettingsArrow(
+            title = "Version",
+            summary = "Magisk Next ${com.topjohnwu.magisk.core.BuildConfig.APP_VERSION_NAME} (${com.topjohnwu.magisk.core.BuildConfig.APP_VERSION_CODE})",
+            onClick = {
+                tapCount++
+                clickJob?.cancel()
+                if (tapCount >= 5) {
+                    if (!Config.developerMode) {
+                        Config.developerMode = true
+                        onDevModeUnlocked()
+                        showToast = true
+                    }
+                    tapCount = 0
+                } else {
+                    clickJob = scope.launch {
+                        kotlinx.coroutines.delay(300)
+                        if (tapCount > 0 && tapCount < 5) {
+                            tapCount = 0
+                            val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            intent.data = android.net.Uri.parse("package:${context.packageName}")
+                            context.startActivity(intent)
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+    if (showToast) {
+        android.widget.Toast.makeText(context, "Developer settings unlocked", android.widget.Toast.LENGTH_SHORT).show()
+        showToast = false
     }
 }
 

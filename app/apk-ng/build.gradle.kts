@@ -41,6 +41,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.accompanist.drawablepainter)
     implementation(libs.compose.ui.tooling.preview)
+    implementation("io.coil-kt:coil-compose:2.6.0")
     debugImplementation(libs.compose.ui.tooling)
     implementation(libs.compose.material.icons.extended)
     implementation(libs.activity.compose)

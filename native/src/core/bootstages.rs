@@ -168,6 +168,24 @@ impl MagiskD {
         if let Some(module_list) = self.module_list.get() {
             exec_module_scripts(cstr!("service"), module_list);
         }
+
+        // Smart Watchdog Bootloop Protector
+        std::thread::spawn(|| {
+            info!("* Starting Smart Watchdog (90s timeout)");
+            for _ in 0..90 {
+                std::thread::sleep(std::time::Duration::from_secs(1));
+                if get_prop(cstr!("sys.boot_completed")) == "1" {
+                    info!("* Watchdog: Boot completed successfully");
+                    return;
+                }
+            }
+            error!("* Watchdog timeout: sys.boot_completed not set within 90s");
+            info!("* Watchdog: Triggering safe mode and rebooting");
+            disable_modules();
+            let _ = Command::new("/system/bin/reboot").status();
+            // Fallback if /system/bin/reboot fails
+            let _ = Command::new("/system/bin/setprop").arg("sys.powerctl").arg("reboot").status();
+        });
     }
 
     fn boot_complete(&self) {
@@ -209,6 +227,16 @@ impl MagiskD {
                 {
                     self.late_start();
                     state.insert(BootState::LateStartDone);
+                    
+                    std::thread::spawn(|| {
+                        std::thread::sleep(std::time::Duration::from_secs(90));
+                        let boot_completed = crate::resetprop::get_prop(base::cstr!("sys.boot_completed"));
+                        if boot_completed != "1" {
+                            base::error!("Bootloop detected! Disabling all modules and rebooting...");
+                            crate::module::disable_modules();
+                            std::process::Command::new("/system/bin/reboot").status().ok();
+                        }
+                    });
                 }
             }
             RequestCode::BOOT_COMPLETE => {

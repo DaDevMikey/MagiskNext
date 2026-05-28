@@ -25,7 +25,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import kotlinx.parcelize.Parcelize
 
-class ModuleItem(val module: LocalModule) {
+import com.topjohnwu.superuser.Shell
+
+class ModuleItem(val module: LocalModule, val hasWebUI: Boolean = false) {
     val showNotice: Boolean
     val showAction: Boolean
     val noticeText: TextHolder
@@ -75,11 +77,39 @@ class ModuleViewModel : AsyncLoadViewModel() {
 
     override suspend fun doLoadWork() {
         _uiState.update { it.copy(loading = true) }
+        
+        if (com.topjohnwu.magisk.core.Config.fakeRoot) {
+            val fakeModuleDir = com.topjohnwu.magisk.core.utils.RootUtils.fs.getFile(com.topjohnwu.magisk.core.AppContext.cacheDir.absolutePath, "fake_module")
+            fakeModuleDir.mkdirs()
+            
+            val fakeLocalModule = LocalModule(fakeModuleDir).apply {
+                author = "Magisk Next"
+                description = "This is a mock module to demonstrate the UI when Fake Root is enabled."
+            }
+            try {
+                fakeLocalModule.javaClass.superclass?.getDeclaredField("id")?.apply { isAccessible = true }?.set(fakeLocalModule, "fake_module")
+                fakeLocalModule.javaClass.superclass?.getDeclaredField("name")?.apply { isAccessible = true }?.set(fakeLocalModule, "Fake Module")
+                fakeLocalModule.javaClass.superclass?.getDeclaredField("version")?.apply { isAccessible = true }?.set(fakeLocalModule, "1.0.0")
+                fakeLocalModule.javaClass.superclass?.getDeclaredField("versionCode")?.apply { isAccessible = true }?.set(fakeLocalModule, 1)
+            } catch (e: Exception) {
+                // Ignore
+            }
+            
+            val fakeModules = listOf(ModuleItem(fakeLocalModule, hasWebUI = true))
+            _uiState.update { it.copy(loading = false, modules = fakeModules) }
+            return
+        }
+
         val moduleLoaded = Info.env.isActive &&
             withContext(Dispatchers.IO) { LocalModule.loaded() }
         if (moduleLoaded) {
+            val webUIs = withContext(Dispatchers.IO) {
+                Shell.cmd("ls -d /data/adb/modules/*/webroot").exec().out
+                    .mapNotNull { it.substringAfter("/modules/").substringBefore("/webroot") }
+                    .toSet()
+            }
             val modules = withContext(Dispatchers.Default) {
-                LocalModule.installed().map { ModuleItem(it) }
+                LocalModule.installed().map { ModuleItem(it, webUIs.contains(it.id)) }
             }
             _uiState.update { it.copy(loading = false, modules = modules) }
             loadUpdateInfo()
@@ -115,6 +145,10 @@ class ModuleViewModel : AsyncLoadViewModel() {
 
     fun runAction(id: String, name: String) {
         navigateTo(Route.Action(id, name))
+    }
+
+    fun openWebUI(context: Context, id: String, name: String) {
+        context.startActivity(WebUIActivity.intent(context, id, name))
     }
 
     fun toggleEnabled(item: ModuleItem) {

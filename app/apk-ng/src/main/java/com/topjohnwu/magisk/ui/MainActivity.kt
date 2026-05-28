@@ -129,6 +129,20 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                                     LaunchedEffect(Unit) { vm.startLoading() }
                                     DenyListScreen(vm, onBack = { navigator.pop() })
                                 }
+                                entry<Route.Log> { _ ->
+                                    val vm: com.topjohnwu.magisk.ui.log.LogViewModel = viewModel(factory = VMFactory)
+                                    LaunchedEffect(Unit) { vm.startLoading() }
+                                    com.topjohnwu.magisk.ui.log.LogScreen(vm, onBack = { navigator.pop() })
+                                }
+                                entry<Route.ExperimentalFeatures> { _ ->
+                                    com.topjohnwu.magisk.ui.experimental.ExperimentalFeaturesScreen(navigator = navigator, onBack = { navigator.pop() })
+                                }
+                                entry<Route.ModuleHub> { _ ->
+                                    com.topjohnwu.magisk.ui.module.ModuleHubScreen(onBack = { navigator.pop() })
+                                }
+                                entry<Route.ModuleCreator> { _ ->
+                                    com.topjohnwu.magisk.ui.module.ModuleCreatorScreen(onBack = { navigator.pop() })
+                                }
                                 entry<Route.Flash> { key ->
                                     val vm: FlashViewModel = viewModel(factory = VMFactory)
                                     LaunchedEffect(key) {
@@ -199,8 +213,8 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
             intent?.getStringExtra(Const.Key.OPEN_SECTION)
         }
         return when (section) {
-            Const.Nav.SUPERUSER -> Tab.SUPERUSER.ordinal
-            Const.Nav.MODULES -> Tab.MODULES.ordinal
+            Const.Nav.SUPERUSER -> Tab.SU_DASHBOARD.ordinal
+            Const.Nav.MODULES -> Tab.SU_DASHBOARD.ordinal
             Const.Nav.SETTINGS -> Tab.SETTINGS.ordinal
             else -> Tab.HOME.ordinal
         }

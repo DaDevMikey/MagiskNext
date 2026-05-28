@@ -23,6 +23,7 @@ data class LocalModule(
     override var versionCode: Int = -1
     var author: String = ""
     var description: String = ""
+    var banner: String? = null
     var updateInfo: OnlineModule? = null
     var outdated = false
     private var updateUrl: String = ""
@@ -83,6 +84,7 @@ data class LocalModule(
                 "author" -> author = value
                 "description" -> description = value
                 "updateJson" -> updateUrl = value
+                "banner" -> banner = value
             }
         }
     }
@@ -98,6 +100,15 @@ data class LocalModule(
 
         if (name.isEmpty()) {
             name = id
+        }
+
+        if (banner == null) {
+            val png = base.getChildFile("banner.png")
+            val jpg = base.getChildFile("banner.jpg")
+            val webp = base.getChildFile("banner.webp")
+            if (png.exists()) banner = "file://" + png.absolutePath
+            else if (jpg.exists()) banner = "file://" + jpg.absolutePath
+            else if (webp.exists()) banner = "file://" + webp.absolutePath
         }
     }
 
