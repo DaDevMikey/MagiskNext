@@ -188,7 +188,7 @@ fun SetupScreen(onFinishSetup: () -> Unit) {
                     },
                     label = "title"
                 ) { title ->
-                    Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onBackground)
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 AnimatedContent(
