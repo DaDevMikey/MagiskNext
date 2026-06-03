@@ -29,7 +29,7 @@ Get updates and releases on the [Magisk Next Releases](https://github.com/DaDevM
 
 ## Developer & User Documentation
 
-For full guides on how to implement the Module Hub, WebUI Bridge, Action Scripts, and Banners into your modules, or to learn about all the user-facing tools, please see our dedicated [Documentation Website](https://dadevmikey.github.io/MagiskNext/).
+For full guides on how to implement the Module Hub, WebUI Bridge, Action Scripts, and Banners into your modules, or to learn about all the user-facing tools, please see our dedicated [Documentation Website](https://dadevmikey.github.io/MagiskNext/docs).
 
 Alternatively, you can run the documentation locally:
 ```bash
