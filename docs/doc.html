@@ -156,6 +156,41 @@
         const file = params.get('file');
         const contentDiv = document.getElementById('content');
 
+        function resolvePath(basePath, relativePath) {
+            if (relativePath.startsWith('http://') || relativePath.startsWith('https://') || relativePath.startsWith('mailto:')) {
+                return relativePath;
+            }
+            if (relativePath.startsWith('/images/')) {
+                return relativePath.substring(1);
+            }
+            if (relativePath.startsWith('/')) {
+                return relativePath;
+            }
+
+            const baseParts = basePath.split('/');
+            baseParts.pop(); // remove file name
+
+            const relParts = relativePath.split('#');
+            const pathPart = relParts[0];
+            const hash = relParts[1] ? '#' + relParts[1] : '';
+
+            if (!pathPart) {
+                return basePath + hash;
+            }
+
+            const pathSegments = pathPart.split('/');
+            for (const segment of pathSegments) {
+                if (segment === '.' || segment === '') {
+                    continue;
+                } else if (segment === '..') {
+                    baseParts.pop();
+                } else {
+                    baseParts.push(segment);
+                }
+            }
+            return baseParts.join('/') + hash;
+        }
+
         if (!file) {
             contentDiv.innerHTML = '<div class="error-message"><h2>Error</h2><p>No document specified.</p></div>';
         } else {
@@ -168,9 +203,6 @@
                     return response.text();
                 })
                 .then(text => {
-                    // Fix image paths: replace relative image paths for proper rendering
-                    // E.g. "./images/device_info.png" -> "/MagiskNext/images/device_info.png" or just "images/device_info.png"
-                    // But if doc.html is at root, "images/" works fine.
                     // Set title from the first H1 if available
                     const titleMatch = text.match(/^#\s+(.+)$/m);
                     if (titleMatch) {
@@ -179,6 +211,53 @@
                     
                     // Parse markdown to HTML
                     contentDiv.innerHTML = marked.parse(text);
+
+                    // Post-process links
+                    const links = contentDiv.querySelectorAll('a');
+                    links.forEach(link => {
+                        const href = link.getAttribute('href');
+                        if (!href) return;
+
+                        if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:')) {
+                            return;
+                        }
+                        if (href.startsWith('#')) {
+                            return; // Native scrolling for hash links
+                        }
+
+                        const resolved = resolvePath(file, href);
+                        if (resolved.endsWith('.md') || resolved.includes('.md#') || resolved.includes('.md?')) {
+                            link.setAttribute('href', `doc.html?file=${resolved}`);
+                        } else {
+                            link.setAttribute('href', resolved);
+                        }
+                    });
+
+                    // Post-process images
+                    const images = contentDiv.querySelectorAll('img');
+                    images.forEach(img => {
+                        const src = img.getAttribute('src');
+                        if (!src) return;
+
+                        if (src.startsWith('http://') || src.startsWith('https://')) {
+                            return;
+                        }
+
+                        const resolved = resolvePath(file, src);
+                        img.setAttribute('src', resolved);
+                    });
+
+                    // Scroll to hash if present in URL
+                    const hash = window.location.hash;
+                    if (hash) {
+                        const targetId = decodeURIComponent(hash.substring(1));
+                        const targetEl = document.getElementById(targetId);
+                        if (targetEl) {
+                            setTimeout(() => {
+                                targetEl.scrollIntoView({ behavior: 'smooth' });
+                            }, 100);
+                        }
+                    }
                 })
                 .catch(error => {
                     contentDiv.innerHTML = `<div class="error-message"><h2>404</h2><p>Could not load ${file}. It might have been moved or deleted.</p></div>`;

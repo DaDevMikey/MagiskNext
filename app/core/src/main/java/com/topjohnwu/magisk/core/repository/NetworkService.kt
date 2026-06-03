@@ -81,7 +81,7 @@ class NetworkService(
         return UpdateInfo(
             version = version,
             versionCode = versionCode,
-            link = assets.find(selector)!!.url,
+            link = assets.find(selector)?.url ?: "",
             note = "## $date $name\n\n$body"
         )
     }
@@ -90,7 +90,7 @@ class NetworkService(
         return UpdateInfo(
             version = name.substring(8, 16),
             versionCode = versionCode,
-            link = assets.find(selector)!!.url,
+            link = assets.find(selector)?.url ?: "",
             note = "## $name\n\n$body"
         )
     }

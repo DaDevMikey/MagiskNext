@@ -253,11 +253,17 @@ fun DownloadComposableDialog(
 
     fun isValidUrl(url: String): Uri? {
         if (url.isEmpty()) return null
-        val uri = url.toUri()
-        if (!uri.scheme.equals("https", ignoreCase = true)) return null
-        if (uri.host.isNullOrEmpty()) return null
-        if (uri.path.isNullOrEmpty()) return null
-        return uri
+        return try {
+            val uri = url.toUri()
+            val scheme = uri.scheme
+            if (scheme == null || (!scheme.equals("https", ignoreCase = true) && !scheme.equals("http", ignoreCase = true))) {
+                return null
+            }
+            if (uri.host.isNullOrEmpty()) return null
+            uri
+        } catch (e: Exception) {
+            null
+        }
     }
 
     AlertDialog(
