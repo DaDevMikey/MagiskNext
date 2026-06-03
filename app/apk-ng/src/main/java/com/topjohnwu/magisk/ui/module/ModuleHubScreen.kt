@@ -8,7 +8,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.CloudDownload
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,6 +35,7 @@ fun ModuleHubScreen(
     var searchQuery by remember { mutableStateOf("") }
     var sortOption by remember { mutableStateOf(SortOption.NAME) }
     var showSortMenu by remember { mutableStateOf(false) }
+    var pinnedModules by remember { mutableStateOf(com.topjohnwu.magisk.core.Config.pinnedModules) }
 
     Scaffold(
         topBar = {
@@ -98,7 +101,7 @@ fun ModuleHubScreen(
                     Text("No modules available yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
-                val filteredModules = remember(viewModel.modules, searchQuery, sortOption) {
+                val filteredModules = remember(viewModel.modules, searchQuery, sortOption, pinnedModules) {
                     viewModel.modules
                         .filter {
                             it.name.contains(searchQuery, ignoreCase = true) ||
@@ -106,9 +109,10 @@ fun ModuleHubScreen(
                             it.description.contains(searchQuery, ignoreCase = true)
                         }
                         .let { list ->
+                            val pinned = pinnedModules
                             when (sortOption) {
-                                SortOption.NAME -> list.sortedBy { it.name.lowercase() }
-                                SortOption.AUTHOR -> list.sortedBy { it.author.lowercase() }
+                                SortOption.NAME -> list.sortedWith(compareByDescending<OnlineModule> { pinned.contains(it.id) }.thenBy { it.name.lowercase() })
+                                SortOption.AUTHOR -> list.sortedWith(compareByDescending<OnlineModule> { pinned.contains(it.id) }.thenBy { it.author.lowercase() })
                             }
                         }
                 }
@@ -119,6 +123,8 @@ fun ModuleHubScreen(
                     items(filteredModules) { module ->
                         ModuleHubItem(
                             item = module,
+                            pinnedModules = pinnedModules,
+                            onPinnedChange = { pinnedModules = it },
                             onDownloadClick = {
                                 val subject = OnlineModuleSubject(module, true)
                                 val activity = context as? com.topjohnwu.magisk.ui.MainActivity
@@ -139,7 +145,7 @@ fun ModuleHubScreen(
 enum class SortOption { NAME, AUTHOR }
 
 @Composable
-private fun ModuleHubItem(item: OnlineModule, onDownloadClick: () -> Unit) {
+private fun ModuleHubItem(item: OnlineModule, pinnedModules: Set<String>, onPinnedChange: (Set<String>) -> Unit, onDownloadClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -171,6 +177,22 @@ private fun ModuleHubItem(item: OnlineModule, onDownloadClick: () -> Unit) {
                     text = item.description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            val isPinned = pinnedModules.contains(item.id)
+            IconButton(
+                onClick = {
+                    val current = pinnedModules.toMutableSet()
+                    if (isPinned) current.remove(item.id) else current.add(item.id)
+                    com.topjohnwu.magisk.core.Config.pinnedModules = current
+                    onPinnedChange(current)
+                },
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = if (isPinned) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                    contentDescription = "Pin ${item.name}",
+                    tint = if (isPinned) androidx.compose.ui.graphics.Color(0xFFFFB300) else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             IconButton(

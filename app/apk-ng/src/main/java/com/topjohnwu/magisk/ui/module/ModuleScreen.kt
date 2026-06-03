@@ -23,13 +23,23 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -77,7 +87,7 @@ import com.topjohnwu.magisk.utils.textHolder
 import kotlinx.coroutines.launch
 import com.topjohnwu.magisk.core.R as CoreR
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun ModuleScreen(viewModel: ModuleViewModel, innerPadding: PaddingValues? = null) {
     val uiState by viewModel.uiState.collectAsState()
@@ -93,6 +103,14 @@ fun ModuleScreen(viewModel: ModuleViewModel, innerPadding: PaddingValues? = null
 
     var pendingOnlineModule by remember { mutableStateOf<OnlineModule?>(null) }
     val showOnlineDialog = rememberSaveable { mutableStateOf(false) }
+
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    var sortOption by rememberSaveable { mutableStateOf(SortOption.NAME) }
+    var showSortMenu by remember { mutableStateOf(false) }
+    var showSearchBar by remember { mutableStateOf(false) }
+    var selectedModules by remember { mutableStateOf(setOf<String>()) }
+    val isSelectionMode = selectedModules.isNotEmpty()
+    var pinnedModules by remember { mutableStateOf(com.topjohnwu.magisk.core.Config.pinnedModules) }
 
     val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
@@ -174,6 +192,20 @@ fun ModuleScreen(viewModel: ModuleViewModel, innerPadding: PaddingValues? = null
                     )
                 }
             } else {
+                val filteredModules = remember(uiState.modules, searchQuery, sortOption, pinnedModules) {
+                    uiState.modules
+                        .filter {
+                            it.module.name.contains(searchQuery, ignoreCase = true) ||
+                            it.module.author.contains(searchQuery, ignoreCase = true) ||
+                            it.module.description.contains(searchQuery, ignoreCase = true)
+                        }
+                        .let { list ->
+                            when (sortOption) {
+                                SortOption.NAME -> list.sortedWith(compareByDescending<com.topjohnwu.magisk.ui.module.ModuleItem> { pinnedModules.contains(it.module.id) }.thenBy { it.module.name.lowercase() })
+                                SortOption.AUTHOR -> list.sortedWith(compareByDescending<com.topjohnwu.magisk.ui.module.ModuleItem> { pinnedModules.contains(it.module.id) }.thenBy { it.module.author.lowercase() })
+                            }
+                        }
+                }
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -184,10 +216,20 @@ fun ModuleScreen(viewModel: ModuleViewModel, innerPadding: PaddingValues? = null
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     item { Spacer(Modifier.height(4.dp)) }
-                    items(uiState.modules, key = { it.module.id }) { item ->
+                    items(filteredModules, key = { it.module.id }) { item ->
+                        val isSelected = selectedModules.contains(item.module.id)
                         ModuleCard(
                             item = item,
                             viewModel = viewModel,
+                            isSelected = isSelected,
+                            isSelectionMode = isSelectionMode,
+                            pinnedModules = pinnedModules,
+                            onPinnedChange = { pinnedModules = it },
+                            onSelect = {
+                                val current = selectedModules.toMutableSet()
+                                if (isSelected) current.remove(item.module.id) else current.add(item.module.id)
+                                selectedModules = current
+                            },
                             onUpdateClick = { onlineModule ->
                                 if (onlineModule != null && Info.isConnected.value == true) {
                                     pendingOnlineModule = onlineModule
@@ -225,10 +267,63 @@ fun ModuleScreen(viewModel: ModuleViewModel, innerPadding: PaddingValues? = null
     } else {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text(stringResource(CoreR.string.modules)) },
-                    scrollBehavior = scrollBehavior
-                )
+                if (isSelectionMode) {
+                    TopAppBar(
+                        title = { Text("${selectedModules.size} Selected") },
+                        navigationIcon = {
+                            IconButton(onClick = { selectedModules = emptySet() }) {
+                                Icon(Icons.Default.Close, contentDescription = "Clear Selection")
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = {
+                                val toUninstall = uiState.modules.filter { it.module.id in selectedModules && !it.isRemoved }
+                                toUninstall.forEach { viewModel.toggleRemove(it) }
+                                selectedModules = emptySet()
+                                android.widget.Toast.makeText(context, "Batch uninstall queued", android.widget.Toast.LENGTH_SHORT).show()
+                            }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Uninstall Selected", tint = colorScheme.error)
+                            }
+                        },
+                        scrollBehavior = scrollBehavior
+                    )
+                } else if (showSearchBar) {
+                    TopAppBar(
+                        title = {
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                modifier = Modifier.fillMaxWidth().padding(end = 8.dp),
+                                placeholder = { Text("Search local modules...") },
+                                singleLine = true,
+                                shape = MaterialTheme.shapes.extraLarge
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { showSearchBar = false; searchQuery = "" }) {
+                                Icon(Icons.Default.Close, contentDescription = "Close Search")
+                            }
+                        },
+                        scrollBehavior = scrollBehavior
+                    )
+                } else {
+                    TopAppBar(
+                        title = { Text(stringResource(CoreR.string.modules)) },
+                        actions = {
+                            IconButton(onClick = { showSearchBar = true }) {
+                                Icon(Icons.Default.Search, contentDescription = "Search")
+                            }
+                            IconButton(onClick = { showSortMenu = true }) {
+                                Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort")
+                            }
+                            DropdownMenu(expanded = showSortMenu, onDismissRequest = { showSortMenu = false }) {
+                                DropdownMenuItem(text = { Text("Sort by Name") }, onClick = { sortOption = SortOption.NAME; showSortMenu = false })
+                                DropdownMenuItem(text = { Text("Sort by Author") }, onClick = { sortOption = SortOption.AUTHOR; showSortMenu = false })
+                            }
+                        },
+                        scrollBehavior = scrollBehavior
+                    )
+                }
             }
         ) { padding ->
             content(padding)
@@ -236,8 +331,18 @@ fun ModuleScreen(viewModel: ModuleViewModel, innerPadding: PaddingValues? = null
     }
 }
 
+@androidx.compose.foundation.ExperimentalFoundationApi
 @Composable
-private fun ModuleCard(item: ModuleItem, viewModel: ModuleViewModel, onUpdateClick: (OnlineModule?) -> Unit) {
+private fun ModuleCard(
+    item: ModuleItem,
+    viewModel: ModuleViewModel,
+    isSelected: Boolean = false,
+    isSelectionMode: Boolean = false,
+    pinnedModules: Set<String>,
+    onPinnedChange: (Set<String>) -> Unit,
+    onSelect: () -> Unit = {},
+    onUpdateClick: (OnlineModule?) -> Unit
+) {
     val infoAlpha = if (!item.isRemoved && item.isEnabled && !item.showNotice) 1f else 0.5f
     val strikeThrough = if (item.isRemoved) TextDecoration.LineThrough else TextDecoration.None
     val colorScheme = MaterialTheme.colorScheme
@@ -250,9 +355,18 @@ private fun ModuleCard(item: ModuleItem, viewModel: ModuleViewModel, onUpdateCli
     var expanded by rememberSaveable(item.module.id) { mutableStateOf(false) }
     val hasDescription = item.module.description.isNotBlank()
     val context = LocalContext.current
+    
+    val backgroundColor = if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceContainerHigh
 
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(enabled = hasDescription) { expanded = !expanded },
+        modifier = Modifier.fillMaxWidth().combinedClickable(
+            onClick = {
+                if (isSelectionMode) onSelect()
+                else if (hasDescription) expanded = !expanded
+            },
+            onLongClick = onSelect
+        ),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = backgroundColor)
     ) {
         Box {
             if (item.module.banner != null) {
@@ -289,6 +403,19 @@ private fun ModuleCard(item: ModuleItem, viewModel: ModuleViewModel, onUpdateCli
                         style = MaterialTheme.typography.bodyMedium,
                         color = colorScheme.onSurfaceVariant,
                         textDecoration = strikeThrough,
+                    )
+                }
+                val isPinned = pinnedModules.contains(item.module.id)
+                IconButton(onClick = {
+                    val current = pinnedModules.toMutableSet()
+                    if (isPinned) current.remove(item.module.id) else current.add(item.module.id)
+                    com.topjohnwu.magisk.core.Config.pinnedModules = current
+                    onPinnedChange(current)
+                }) {
+                    Icon(
+                        imageVector = if (isPinned) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                        contentDescription = "Pin ${item.module.name}",
+                        tint = if (isPinned) androidx.compose.ui.graphics.Color(0xFFFFB300) else colorScheme.onSurfaceVariant
                     )
                 }
                 Switch(

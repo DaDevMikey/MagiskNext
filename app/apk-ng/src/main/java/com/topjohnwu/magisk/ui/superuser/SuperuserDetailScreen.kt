@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -146,6 +147,33 @@ fun SuperuserDetailScreen(
                 checked = item.logging,
                 onCheckedChange = { viewModel.updateLogging(item) }
             )
+            
+            // KernelSU Port Features Stubs
+            androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Text(
+                text = "KernelSU Features",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 16.dp, bottom = 4.dp, top = 8.dp)
+            )
+            
+            var customProfileEnabled by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+            SettingsSwitch(
+                title = "App Profile",
+                summary = "Customize UID, GID, capabilities, and namespaces for this app.",
+                checked = customProfileEnabled,
+                onCheckedChange = { customProfileEnabled = it }
+            )
+            
+            var unmountModules by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+            SettingsSwitch(
+                title = "Unmount Modules",
+                summary = "Hide specific Magisk modules from this application.",
+                checked = unmountModules,
+                onCheckedChange = { unmountModules = it }
+            )
+
+            androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
             RevokeButton {
                 if (viewModel.requiresAuth) {

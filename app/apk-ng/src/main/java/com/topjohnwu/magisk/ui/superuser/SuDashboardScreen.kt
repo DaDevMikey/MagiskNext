@@ -12,10 +12,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import com.topjohnwu.magisk.ui.module.ModuleScreen
 import com.topjohnwu.magisk.ui.module.ModuleViewModel
@@ -26,8 +27,9 @@ fun SuDashboardScreen(
     suViewModel: SuperuserViewModel,
     moduleViewModel: ModuleViewModel
 ) {
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Apps", "Modules")
+    val pagerState = rememberPagerState(pageCount = { tabs.size })
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -35,11 +37,11 @@ fun SuDashboardScreen(
                 TopAppBar(
                     title = { Text("SU Dashboard") }
                 )
-                TabRow(selectedTabIndex = selectedTabIndex) {
+                TabRow(selectedTabIndex = pagerState.currentPage) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
-                            selected = selectedTabIndex == index,
-                            onClick = { selectedTabIndex = index },
+                            selected = pagerState.currentPage == index,
+                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
                             text = { Text(title) }
                         )
                     }
@@ -47,8 +49,11 @@ fun SuDashboardScreen(
             }
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            if (selectedTabIndex == 0) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.padding(padding).fillMaxSize()
+        ) { page ->
+            if (page == 0) {
                 SuperuserScreen(viewModel = suViewModel, innerPadding = PaddingValues(0.dp))
             } else {
                 ModuleScreen(viewModel = moduleViewModel, innerPadding = PaddingValues(0.dp))

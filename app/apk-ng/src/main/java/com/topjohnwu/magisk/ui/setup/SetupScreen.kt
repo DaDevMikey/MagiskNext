@@ -84,9 +84,9 @@ fun SetupScreen(onFinishSetup: () -> Unit) {
             ),
             SetupPageData(
                 icon = Icons.Default.Security,
-                title = "DenyList",
-                subtitle = "Hide the Magisk su binary from specific apps to bypass detection.",
-                content = { DenyListSetting() }
+                title = "Root Isolation Mode",
+                subtitle = "Choose how root access should be managed for applications.",
+                content = { RootIsolationSetting() }
             ),
             SetupPageData(
                 icon = Icons.Default.DarkMode,
@@ -368,12 +368,43 @@ private fun ZygiskSetting() {
 }
 
 @Composable
-private fun DenyListSetting() {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(bottom = 8.dp)) {
-            var denylist by remember { mutableStateOf(Config.suRestrict) }
-            SettingsSwitch("Enforce DenyList", "Strictly hide Magisk from selected apps.", denylist) {
-                denylist = it; Config.suRestrict = it
+private fun RootIsolationSetting() {
+    var suListMode by remember { mutableStateOf(Config.suListMode) }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Card(
+            onClick = {
+                suListMode = false
+                Config.suListMode = false
+            },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = if (!suListMode) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(selected = !suListMode, onClick = null)
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text("DenyList (Blacklist)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Root is granted by default. Hide root from specific apps.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+
+        Card(
+            onClick = {
+                suListMode = true
+                Config.suListMode = true
+            },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = if (suListMode) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(selected = suListMode, onClick = null)
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text("SuList (Whitelist)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Root is isolated by default. Grant root only to specific apps.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
     }

@@ -28,6 +28,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -184,24 +185,36 @@ private fun InstallOptionsSection(
         if (uiState.step == 0) {
             Spacer(Modifier.height(8.dp))
             if (!Info.isSAR) {
+                var checked by remember { mutableStateOf(Config.keepVerity) }
                 CheckboxRow(
                     label = stringResource(CoreR.string.keep_dm_verity),
-                    checked = Config.keepVerity,
-                    onCheckedChange = { Config.keepVerity = it }
+                    checked = checked,
+                    onCheckedChange = { 
+                        checked = it
+                        Config.keepVerity = it 
+                    }
                 )
             }
             if (Info.isFDE) {
+                var checked by remember { mutableStateOf(Config.keepEnc) }
                 CheckboxRow(
                     label = stringResource(CoreR.string.keep_force_encryption),
-                    checked = Config.keepEnc,
-                    onCheckedChange = { Config.keepEnc = it }
+                    checked = checked,
+                    onCheckedChange = { 
+                        checked = it
+                        Config.keepEnc = it 
+                    }
                 )
             }
             if (!Info.ramdisk) {
+                var checked by remember { mutableStateOf(Config.recovery) }
                 CheckboxRow(
                     label = stringResource(CoreR.string.recovery_mode),
-                    checked = Config.recovery,
-                    onCheckedChange = { Config.recovery = it }
+                    checked = checked,
+                    onCheckedChange = { 
+                        checked = it
+                        Config.recovery = it 
+                    }
                 )
             }
         }

@@ -25,8 +25,9 @@ class ActionTileService : TileService() {
 
         scope.launch {
             withContext(Dispatchers.IO) {
-                // Example action script execution
-                Shell.cmd("echo 'Action executed' > /cache/magisk_action.log").exec()
+                // Execute the custom script configured in Labs
+                val script = com.topjohnwu.magisk.core.Config.customQsScript
+                Shell.cmd(script).exec()
             }
             
             Toast.makeText(this@ActionTileService, "Action Script Executed", Toast.LENGTH_SHORT).show()

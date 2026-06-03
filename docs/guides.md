@@ -142,7 +142,7 @@ If your module requires some additional sepolicy patches, please add those rules
 
 A Magisk module installer is a Magisk module packaged in a zip file that can be flashed in the Magisk app or custom recoveries such as TWRP. The simplest Magisk module installer is just a Magisk module packed as a zip file, in addition to the following files only if the module supports flashing in recovery:
 
-- `update-binary`: Download the latest [module_installer.sh](https://github.com/topjohnwu/Magisk/blob/master/scripts/module_installer.sh) and rename/copy that script as `update-binary`
+- `update-binary`: Download the latest [module_installer.sh](https://github.com/DaDevMikey/MagiskNext/blob/master/scripts/module_installer.sh) and rename/copy that script as `update-binary`
 - `updater-script`: This file should only contain the string `#MAGISK`
 
 The module installer script will setup the environment, extract the module files from the zip file to the correct location, then finalizes the installation process, which should be good enough for most simple Magisk modules.
@@ -236,7 +236,7 @@ The list above will result in the following dummy devices being created: `$MODPA
 
 #### Notes
 
-- When your module is downloaded with the Magisk app, `update-binary` will be **forcefully** replaced with the latest [`module_installer.sh`](https://github.com/topjohnwu/Magisk/blob/master/scripts/module_installer.sh). **DO NOT** try to add any custom logic in `update-binary`.
+- When your module is downloaded with the Magisk app, `update-binary` will be **forcefully** replaced with the latest [`module_installer.sh`](https://github.com/DaDevMikey/MagiskNext/blob/master/scripts/module_installer.sh). **DO NOT** try to add any custom logic in `update-binary`.
 - Due to historical reasons, **DO NOT** add a file named `install.sh` in your module installer zip.
 - **DO NOT** call `exit` at the end of `customize.sh`. The module installer script has to perform some cleanups before exiting.
 

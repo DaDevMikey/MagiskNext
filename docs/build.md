@@ -22,7 +22,7 @@
 - Setup JDK:
   - The recommended option is to set environment variable `ANDROID_STUDIO` to the path where your Android Studio is installed. The build script will automatically find and use the bundled JDK.
   - You can also setup JDK 17 yourself, but this guide will not cover the instructions.
-- Clone sources: `git clone --recurse-submodules https://github.com/topjohnwu/Magisk.git`
+- Clone sources: `git clone --recurse-submodules https://github.com/DaDevMikey/MagiskNext.git`
 - Run `./build.py ndk` to let the script download and install NDK for you
 
 ## Building

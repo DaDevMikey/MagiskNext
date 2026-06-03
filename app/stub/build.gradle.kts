@@ -13,8 +13,8 @@ android {
     namespace = "com.topjohnwu.magisk"
     enableKotlin = false
 
-    val base = "https://github.com/topjohnwu/Magisk/releases/download/"
-    val url = base + "v${Config.version}/Magisk-v${Config.version}.apk"
+    val base = "https://api.github.com/repos/DaDevMikey/MagiskNext/releases/latest"
+    val url = base
 
     defaultConfig {
         applicationId = "com.topjohnwu.magisk"

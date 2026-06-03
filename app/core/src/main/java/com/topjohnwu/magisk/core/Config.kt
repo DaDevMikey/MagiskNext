@@ -50,6 +50,9 @@ object Config : PreferenceConfig, DBConfig {
         const val FAKE_ROOT = "fake_root"
         const val IS_FIRST_LAUNCH = "is_first_launch"
         const val ENABLE_TOOLBOX = "enable_toolbox"
+        const val CUSTOM_QS_SCRIPT = "custom_qs_script"
+        const val PINNED_MODULES = "pinned_modules"
+        const val SU_LIST_MODE = "su_list_mode"
 
         val NO_MIGRATION = setOf(ASKED_HOME, SU_REQUEST_TIMEOUT,
             SU_AUTO_RESPONSE, SU_REAUTH, SU_TAPJACK)
@@ -62,6 +65,18 @@ object Config : PreferenceConfig, DBConfig {
     var enableToolbox: Boolean
         get() = prefs.getBoolean(Key.ENABLE_TOOLBOX, false)
         set(value) = prefs.edit { putBoolean(Key.ENABLE_TOOLBOX, value) }
+
+    var customQsScript: String
+        get() = prefs.getString(Key.CUSTOM_QS_SCRIPT, "echo 'Magisk Action Executed'") ?: "echo 'Magisk Action Executed'"
+        set(value) = prefs.edit { putString(Key.CUSTOM_QS_SCRIPT, value) }
+
+    var pinnedModules: Set<String>
+        get() = prefs.getStringSet(Key.PINNED_MODULES, emptySet()) ?: emptySet()
+        set(value) = prefs.edit { putStringSet(Key.PINNED_MODULES, value) }
+        
+    var suListMode: Boolean
+        get() = prefs.getBoolean(Key.SU_LIST_MODE, false)
+        set(value) = prefs.edit { putBoolean(Key.SU_LIST_MODE, value) }
 
     object OldValue {
         // Update channels

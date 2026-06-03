@@ -24,6 +24,9 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,7 +68,7 @@ import com.topjohnwu.magisk.core.R as CoreR
 enum class Tab(val titleRes: Int, val iconRes: Int) {
     HOME(CoreR.string.section_home, R.drawable.ic_home),
     SU_DASHBOARD(CoreR.string.superuser, CoreR.drawable.ic_superuser),
-    TOOLBOX(CoreR.string.modules, R.drawable.ic_module),
+    TOOLBOX(CoreR.string.toolbox, R.drawable.ic_toolbox),
     SETTINGS(CoreR.string.settings, R.drawable.ic_settings);
 }
 
@@ -149,73 +152,45 @@ private fun FloatingNavigationBar(
     val shape = RoundedCornerShape(28.dp)
     val navBarInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    Row(
+    NavigationBar(
         modifier = modifier
             .padding(bottom = navBarInset + 12.dp, start = 24.dp, end = 24.dp)
             .shadow(elevation = 6.dp, shape = shape)
             .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
             .fillMaxWidth()
-            .height(64.dp)
-            .padding(horizontal = 4.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
+            .height(64.dp),
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        tonalElevation = 0.dp,
+        windowInsets = WindowInsets(0, 0, 0, 0)
     ) {
         visibleTabs.forEachIndexed { index, tab ->
-            FloatingNavItem(
-                icon = ImageVector.vectorResource(tab.iconRes),
-                label = stringResource(tab.titleRes),
+            NavigationBarItem(
+                icon = {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(tab.iconRes),
+                        contentDescription = stringResource(tab.titleRes),
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                label = {
+                    Text(
+                        text = stringResource(tab.titleRes),
+                        fontSize = 11.sp
+                    )
+                },
                 selected = pagerState.currentPage == index,
-                enabled = true,
                 onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                modifier = Modifier.weight(1f)
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                alwaysShowLabel = true
             )
         }
     }
 }
 
-@Composable
-private fun FloatingNavItem(
-    icon: ImageVector,
-    label: String,
-    selected: Boolean,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val contentColor by animateColorAsState(
-        targetValue = when {
-            !enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-            selected -> MaterialTheme.colorScheme.primary
-            else -> MaterialTheme.colorScheme.onSurfaceVariant
-        },
-        animationSpec = tween(200),
-        label = "navItemColor"
-    )
-
-    Column(
-        modifier = modifier
-            .clickable(
-                enabled = enabled,
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() },
-                role = Role.Tab,
-                onClick = onClick,
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            modifier = Modifier.size(24.dp),
-            tint = contentColor,
-        )
-        Spacer(Modifier.height(2.dp))
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            color = contentColor,
-        )
-    }
-}

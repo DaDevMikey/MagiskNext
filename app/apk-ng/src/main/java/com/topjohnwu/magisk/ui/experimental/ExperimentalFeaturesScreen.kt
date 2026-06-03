@@ -123,6 +123,37 @@ fun ExperimentalFeaturesScreen(navigator: Navigator, onBack: () -> Unit) {
                     )
                 }
             }
+
+            var qsScript by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(com.topjohnwu.magisk.core.Config.customQsScript) }
+            Card(
+                modifier = Modifier.fillMaxWidth().animateContentSize(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+                shape = MaterialTheme.shapes.large
+            ) {
+                Column(modifier = Modifier.padding(20.dp).fillMaxWidth()) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        FilledTonalIconButton(onClick = {}) {
+                            Icon(Icons.Outlined.Build, contentDescription = null) // Reusing Build icon since Action wasn't resolving easily
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Custom QS Script", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                            Text("The shell script to execute when you tap the Custom Action Quick Settings tile.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = qsScript,
+                        onValueChange = { 
+                            qsScript = it
+                            com.topjohnwu.magisk.core.Config.customQsScript = it
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        textStyle = androidx.compose.ui.text.TextStyle(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontSize = androidx.compose.ui.unit.TextUnit(12f, androidx.compose.ui.unit.TextUnitType.Sp)),
+                        maxLines = 5,
+                        shape = MaterialTheme.shapes.medium
+                    )
+                }
+            }
         }
     }
 }

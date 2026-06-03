@@ -43,6 +43,8 @@ class WebUIActivity : ComponentActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        @Suppress("DEPRECATION")
+        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
 
         val moduleId = intent.getStringExtra(EXTRA_MODULE_ID) ?: return finish()
         val moduleName = intent.getStringExtra(EXTRA_MODULE_NAME) ?: moduleId
@@ -148,6 +150,12 @@ class WebUIActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun finish() {
+        super.finish()
+        @Suppress("DEPRECATION")
+        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
     }
 
     class MagiskJS {

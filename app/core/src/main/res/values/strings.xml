@@ -9,6 +9,7 @@
     <string name="section_home">Home</string>
     <string name="section_theme">Themes</string>
     <string name="denylist">DenyList</string>
+    <string name="toolbox">Toolbox</string>
 
     <!--Home-->
     <string name="no_connection">No connection available</string>

@@ -19,6 +19,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -84,6 +85,18 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             }
             
             var devMode by remember { mutableStateOf(Config.developerMode) }
+            val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+            androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+                val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+                    if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                        devMode = Config.developerMode
+                    }
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose {
+                    lifecycleOwner.lifecycle.removeObserver(observer)
+                }
+            }
             
             Spacer(Modifier.height(12.dp))
             LabsSection(navigator)
@@ -472,27 +485,7 @@ private fun LabsSection(navigator: com.topjohnwu.magisk.ui.navigation.Navigator)
 private fun DeveloperSection() {
     SmallTitle(text = "Developer Settings")
     Card(modifier = Modifier.fillMaxWidth()) {
-        var fakeRoot by remember { mutableStateOf(Config.fakeRoot) }
-        SettingsSwitch(
-            title = "Fake Root",
-            summary = "Simulates root access in UI without actual privileges (App restart required)",
-            checked = fakeRoot,
-            onCheckedChange = {
-                fakeRoot = it
-                Config.fakeRoot = it
-            }
-        )
-        
         val context = androidx.compose.ui.platform.LocalContext.current
-        SettingsArrow(
-            title = "Reset Setup Screen",
-            summary = "Force the OOBE first-launch setup screen to appear on next restart",
-            onClick = {
-                Config.isFirstLaunch = true
-                android.widget.Toast.makeText(context, "Setup screen reset. Please restart the app.", android.widget.Toast.LENGTH_SHORT).show()
-            }
-        )
-        
         var forceVerbose by remember { mutableStateOf(false) }
         SettingsSwitch(
             title = "Force Verbose Logging",
@@ -509,6 +502,15 @@ private fun DeveloperSection() {
             onCheckedChange = { disableSignature = it }
         )
 
+        HorizontalDivider()
+        SettingsArrow(
+            title = "Open Developer Tools",
+            summary = "Access deep developer tools, diagnostics, and mock options.",
+            onClick = {
+                val intent = android.content.Intent(context, com.topjohnwu.magisk.ui.AdminMainActivity::class.java)
+                context.startActivity(intent)
+            }
+        )
     }
 }
 
@@ -518,9 +520,11 @@ private fun DeveloperSection() {
 private fun InfoSection(onDevModeUnlocked: () -> Unit) {
     val context = LocalContext.current
     var tapCount by remember { mutableIntStateOf(0) }
-    var showToast by remember { mutableStateOf(false) }
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     var clickJob: kotlinx.coroutines.Job? by remember { mutableStateOf(null) }
+    
+    var showPasswordDialog by remember { mutableStateOf(false) }
+    var passwordInput by remember { mutableStateOf("") }
 
     SmallTitle(text = "About")
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -528,23 +532,24 @@ private fun InfoSection(onDevModeUnlocked: () -> Unit) {
             title = "Version",
             summary = "Magisk Next ${com.topjohnwu.magisk.core.BuildConfig.APP_VERSION_NAME} (${com.topjohnwu.magisk.core.BuildConfig.APP_VERSION_CODE})",
             onClick = {
-                tapCount++
-                clickJob?.cancel()
-                if (tapCount >= 5) {
-                    if (!Config.developerMode) {
-                        Config.developerMode = true
-                        onDevModeUnlocked()
-                        showToast = true
-                    }
-                    tapCount = 0
+                if (Config.developerMode) {
+                    val intent = android.content.Intent(context, com.topjohnwu.magisk.ui.AdminMainActivity::class.java)
+                    context.startActivity(intent)
                 } else {
-                    clickJob = scope.launch {
-                        kotlinx.coroutines.delay(300)
-                        if (tapCount > 0 && tapCount < 5) {
-                            tapCount = 0
-                            val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                            intent.data = android.net.Uri.parse("package:${context.packageName}")
-                            context.startActivity(intent)
+                    tapCount++
+                    clickJob?.cancel()
+                    if (tapCount >= 7) {
+                        showPasswordDialog = true
+                        tapCount = 0
+                    } else {
+                        clickJob = scope.launch {
+                            kotlinx.coroutines.delay(300)
+                            if (tapCount > 0 && tapCount < 7) {
+                                tapCount = 0
+                                val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                                intent.data = android.net.Uri.parse("package:${context.packageName}")
+                                context.startActivity(intent)
+                            }
                         }
                     }
                 }
@@ -552,9 +557,48 @@ private fun InfoSection(onDevModeUnlocked: () -> Unit) {
         )
     }
 
-    if (showToast) {
-        android.widget.Toast.makeText(context, "Developer settings unlocked", android.widget.Toast.LENGTH_SHORT).show()
-        showToast = false
+    if (showPasswordDialog) {
+        AlertDialog(
+            onDismissRequest = { 
+                showPasswordDialog = false 
+                passwordInput = ""
+            },
+            title = { Text("Developer Password Required") },
+            text = {
+                OutlinedTextField(
+                    value = passwordInput,
+                    onValueChange = { passwordInput = it },
+                    label = { Text("Enter password to unlock developer settings") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (passwordInput == "MagiskNext2026") {
+                            Config.developerMode = true
+                            onDevModeUnlocked()
+                            showPasswordDialog = false
+                            passwordInput = ""
+                            android.widget.Toast.makeText(context, "Developer settings unlocked", android.widget.Toast.LENGTH_SHORT).show()
+                        } else {
+                            android.widget.Toast.makeText(context, "Incorrect password", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showPasswordDialog = false 
+                    passwordInput = ""
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

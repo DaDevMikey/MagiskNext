@@ -56,6 +56,7 @@ import com.topjohnwu.magisk.ui.navigation.LocalNavigator
 import com.topjohnwu.magisk.ui.navigation.Navigator
 import com.topjohnwu.magisk.ui.navigation.Route
 import com.topjohnwu.magisk.ui.navigation.rememberNavigator
+import androidx.compose.animation.togetherWith
 import com.topjohnwu.magisk.ui.superuser.SuperuserDetailScreen
 import com.topjohnwu.magisk.ui.superuser.SuperuserViewModel
 import com.topjohnwu.magisk.view.Shortcuts
@@ -123,6 +124,33 @@ class MainActivity : ComponentActivity(), SplashScreenHost {
                         androidx.navigation3.ui.NavDisplay(
                             backStack = navigator.backStack,
                             onBack = { navigator.pop() },
+                            transitionSpec = {
+                                androidx.compose.animation.slideInHorizontally(
+                                    animationSpec = androidx.compose.animation.core.tween(300)
+                                ) { it }.togetherWith(
+                                    androidx.compose.animation.slideOutHorizontally(
+                                        animationSpec = androidx.compose.animation.core.tween(300)
+                                    ) { -it }
+                                )
+                            },
+                            popTransitionSpec = {
+                                androidx.compose.animation.slideInHorizontally(
+                                    animationSpec = androidx.compose.animation.core.tween(300)
+                                ) { -it }.togetherWith(
+                                    androidx.compose.animation.slideOutHorizontally(
+                                        animationSpec = androidx.compose.animation.core.tween(300)
+                                    ) { it }
+                                )
+                            },
+                            predictivePopTransitionSpec = {
+                                androidx.compose.animation.slideInHorizontally(
+                                    animationSpec = androidx.compose.animation.core.tween(300)
+                                ) { -it }.togetherWith(
+                                    androidx.compose.animation.slideOutHorizontally(
+                                        animationSpec = androidx.compose.animation.core.tween(300)
+                                    ) { it }
+                                )
+                            },
                             entryDecorators = listOf(
                                 rememberSaveableStateHolderNavEntryDecorator(),
                                 rememberViewModelStoreNavEntryDecorator<Any>()

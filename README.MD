@@ -2,28 +2,34 @@
 
 [![Downloads](https://img.shields.io/badge/dynamic/json?color=green&label=Downloads&query=totalString&url=https%3A%2F%2Fraw.githubusercontent.com%2Ftopjohnwu%2Fmagisk-files%2Fcount%2Fcount.json&cacheSeconds=1800)](https://raw.githubusercontent.com/topjohnwu/magisk-files/count/count.json)
 
-#### This is not an officially supported Google product
+# Magisk Next
 
 ## Introduction
 
-Magisk is a suite of open source software for customizing Android, supporting devices higher than Android 6.0.<br>
-Some highlight features:
+**Magisk Next** is a Work-In-Progress (WIP) community-driven fork of Magisk, the suite of open-source software for customizing Android (supporting Android 6.0+). 
 
-- **MagiskSU**: Provide root access for applications
-- **Magisk Modules**: Modify read-only partitions by installing modules
-- **MagiskBoot**: The most complete tool for unpacking and repacking Android boot images
-- **Zygisk**: Run code in every Android applications' processes
+Magisk Next aims to modernize the root management and module ecosystem, baking advanced stealth, stability watchdog safeguards, and visual refinement directly into the core system.
 
-## Downloads
+### New & Highlight Features in Magisk Next:
 
-[Github](https://github.com/topjohnwu/Magisk/releases) is the only source where you can get official Magisk information and downloads.
+- **Native Stealth & DenyList**: Dynamic process isolation and partition unmounting built directly into the core `magiskd` daemon. Stealth is achieved natively without needing Zygisk/Shamiko module stacking.
+- **Advanced Bootloop Protector**: A built-in startup watchdog that monitors the system booting process. If a system crash or module bootloop is detected within 90 seconds, Magisk Next automatically disables active modules and reboots into Safe Mode.
+- **Ultimate Setup Wizard**: A premium, highly polished onboarding experience featuring dynamic Xiaomi-style morphing icons, an expanding circular reveal on completion, and a custom setup profile selector (Standard, Developer, or Module Creator) to configure app defaults.
+- **Bouncy Overscroll Animations**: Beautiful, native iOS-like rubber-banding stretch transitions on lists and scrollable screens using non-clipping `graphicsLayer` overlay rendering, keeping AppBars and bottom menus static.
+- **Developer Settings (AdminMainActivity)**: Deep diagnostics controls protected by a secure password (`MagiskNext2026`). Attempts to bypass or launch it via third-party Activity Launchers while developer settings are locked will cause an instant `SecurityException` crash.
+- **Action Scripts**: Quick Settings tile support to run custom root shell scripts directly from your quick settings panel.
+- **Module Hub**: A built-in discovery page to search, sort (by Name or Author), and install community-created modules online.
+- **Toolbox Utilities**: Integrated device utilities including App Systemizer, Native App Downgrader, Private App Data Backup/Restore, and Module Backup/Restore packaging.
+- **MagiskSU**: Robust root access control for applications.
+- **MagiskBoot**: The most complete tool for unpacking and repacking Android boot images.
 
-## Useful Links
+## Downloads & Code
 
-- [Installation Instruction](https://topjohnwu.github.io/Magisk/install.html)
-## Developer Documentation
+Get updates and releases on the [Magisk Next Releases](https://github.com/DaDevMikey/MagiskNext/releases).
 
-For full guides on how to implement the Module Hub, WebUI Bridge, Action Scripts, and Banners into your modules, please see our dedicated [Documentation Website](https://dadevmikey.github.io/MagiskNext/).
+## Developer & User Documentation
+
+For full guides on how to implement the Module Hub, WebUI Bridge, Action Scripts, and Banners into your modules, or to learn about all the user-facing tools, please see our dedicated [Documentation Website](https://dadevmikey.github.io/MagiskNext/).
 
 Alternatively, you can run the documentation locally:
 ```bash
@@ -31,7 +37,7 @@ cd docs
 npm install
 npm run docs:dev
 ```
-- [Magisk Documentation](https://topjohnwu.github.io/Magisk/)
+- [Official Stock Magisk Documentation](https://topjohnwu.github.io/Magisk/)
 - [Zygisk module sample](https://github.com/topjohnwu/zygisk-module-sample)
 
 ## Bug Reports

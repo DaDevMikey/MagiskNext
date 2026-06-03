@@ -89,7 +89,8 @@ public class DownloadActivity extends Activity {
 
     private void error(Throwable e) {
         Log.e(getClass().getSimpleName(), Log.getStackTraceString(e));
-        finish();
+        runOnUiThread(() -> android.widget.Toast.makeText(this, "Download failed: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show());
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::finish, 3000);
     }
 
     private Request request(String url) {
@@ -108,8 +109,21 @@ public class DownloadActivity extends Activity {
 
     private void dlAPK() {
         ProgressDialog.show(this, getString(dling), getString(dling) + " " + APP_NAME, true);
-        // Download and upgrade the app
-        var request = request(BuildConfig.APK_URL).setExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        
+        request(BuildConfig.APK_URL)
+            .setExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+            .getAsJSONObject(json -> {
+                try {
+                    String apkUrl = json.getJSONArray("assets").getJSONObject(0).getString("browser_download_url");
+                    downloadFile(apkUrl);
+                } catch (Exception e) {
+                    error(e);
+                }
+            });
+    }
+
+    private void downloadFile(String apkUrl) {
+        var request = request(apkUrl).setExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         if (dynLoad) {
             request.getAsFile(StubApk.current(this), file -> StubApk.restartProcess(this));
         } else {

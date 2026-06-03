@@ -12,7 +12,7 @@ Before you start:
 
 ---
 
-Download and install the latest [Magisk app](https://github.com/topjohnwu/Magisk/releases/latest). In the home screen, you should see:
+Download and install the latest [Magisk app](https://github.com/DaDevMikey/MagiskNext/releases/latest). In the home screen, you should see:
 
 <p align="center"><img src="/images/device_info.png" width="500"/></p>
 

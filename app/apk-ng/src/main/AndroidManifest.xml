@@ -32,6 +32,9 @@
         <activity
             android:name=".ui.module.WebUIActivity"
             android:exported="false" />
+        <activity
+            android:name=".ui.AdminMainActivity"
+            android:exported="true" />
 
         <service
             android:name=".services.ActionTileService"

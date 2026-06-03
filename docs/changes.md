@@ -1,5 +1,28 @@
 # Magisk Changelog
 
+### v31.2 (2026.6.3) - Magisk Next
+
+- [App] Require secure password `MagiskNext2026` to unlock Developer Mode in settings (triggered by tapping version 7 times)
+- [App] Open Developer Tools (`AdminMainActivity`) instantly with a single tap on the version card once unlocked
+- [App] Add a "Developer Options" quick-disable switch inside Developer Tools
+- [App] Protect `AdminMainActivity` from Activity Launcher bypasses (crashes with a `SecurityException` if launched when disabled)
+- [App] Fix bouncy overscroll stretch animation disappearing by using a non-clipping `graphicsLayer` overlay translation
+- [App] Upgrade overscroll drag detection to be fully robust against R8, ProGuard, and LSParanoid obfuscation and shrinking
+- [Core] Fix sideload/recovery root detection bug by ensuring `magisk -V` version queries run on the active root shell during init
+- [Core] Bypass connection check validation in `NetworkService` to resolve download and update issues on emulators and custom networks
+
+### v31.1 (2026.5.28) - Magisk Next
+
+- [App] Completely rewrite the Out-of-Box-Experience (OOBE) setup wizard
+- [App] Add Expanding Circular Reveal effect upon finishing setup to seamlessly transition to the main app
+- [App] Add Xiaomi-Style Morphing Icons at the top of the Setup Wizard
+- [App] Add interactive visual mockups (e.g. Dark Mode toggle previews) in the Setup Wizard
+- [App] Add a Profile Selector (Standard User, Developer, Module Creator) to pre-configure defaults
+- [App] Add a search bar and a Sort By dropdown (Name/Author) to the Module Hub discovery page
+- [App] Resolve update checker issue misidentifying releases without a "v" prefix as Canary builds
+- [App] Restore reboot options menu (System, Recovery, Bootloader, Safe Mode) on the Home tab
+- [App] Fix text contrast issues in the Setup Wizard when in Dark Mode
+
 ### v30.7 (2026.2.23)
 
 - [MagiskInit] Support Android 16 QPR2 sepolicy format

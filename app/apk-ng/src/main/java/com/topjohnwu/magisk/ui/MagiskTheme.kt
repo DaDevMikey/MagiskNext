@@ -12,6 +12,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.LocalOverscrollFactory
+import androidx.compose.runtime.rememberCoroutineScope
+import com.topjohnwu.magisk.ui.component.BouncyOverscrollFactory
 import com.topjohnwu.magisk.core.Config
 
 object ThemeState {
@@ -44,8 +51,15 @@ fun MagiskTheme(
         else -> lightColorScheme()
     }
 
+    @OptIn(ExperimentalFoundationApi::class)
     MaterialTheme(
-        colorScheme = colorScheme,
-        content = content
-    )
+        colorScheme = colorScheme
+    ) {
+        val scope = rememberCoroutineScope()
+        androidx.compose.runtime.CompositionLocalProvider(
+            LocalOverscrollFactory provides BouncyOverscrollFactory(scope)
+        ) {
+            content()
+        }
+    }
 }
